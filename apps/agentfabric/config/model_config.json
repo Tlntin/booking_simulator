@@ -1,0 +1,77 @@
+{
+    "qwen-turbo": {
+        "type": "dashscope",
+        "model": "qwen-turbo",
+        "generate_cfg": {
+            "use_raw_prompt": true,
+            "top_p": 0.8
+        }
+    },
+    "qwen-plus": {
+        "type": "dashscope",
+        "model": "qwen-plus",
+        "generate_cfg": {
+            "use_raw_prompt": true,
+            "top_p": 0.8
+        }
+    },
+    "qwen-max": {
+        "type": "dashscope",
+        "model": "qwen-max",
+        "length_constraint": {
+            "knowledge": 4000,
+            "input": 6000
+        },
+        "generate_cfg": {
+            "use_raw_prompt": true,
+            "top_p": 0.8
+        }
+    },
+    "qwen-7b": {
+        "type": "modelscope",
+        "model_id": "qwen/Qwen-7B-Chat",
+        "model_revision": "v1.1.8",
+        "generate_cfg": {
+            "use_raw_prompt": true,
+            "top_p": 0.8,
+            "max_length": 2000
+        }
+    },
+    "qwen-7b-api": {
+        "type": "dashscope",
+        "model": "qwen-7b-chat",
+        "generate_cfg": {
+            "use_raw_prompt": true,
+            "top_p": 0.8,
+            "debug": false
+        }
+    },
+    "qwen-14b": {
+        "type": "modelscope",
+        "model_id": "qwen/Qwen-14B-Chat",
+        "model_revision": "v1.0.8",
+        "generate_cfg": {
+            "use_raw_prompt": true,
+            "top_p": 0.8,
+            "max_length": 2000
+        }
+    },
+    "qwen-14b-api": {
+        "type": "dashscope",
+        "model": "qwen-14b-chat",
+        "generate_cfg": {
+            "use_raw_prompt": true,
+            "top_p": 0.8,
+            "debug": false
+        }
+    },
+    "qwen-72b-api": {
+        "type": "dashscope",
+        "model": "qwen-72b-chat",
+        "generate_cfg": {
+            "use_raw_prompt": true,
+            "top_p": 0.8,
+            "debug": false
+        }
+    }
+}

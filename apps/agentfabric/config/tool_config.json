@@ -1,0 +1,35 @@
+{
+  "image_gen": {
+    "name": "Wanx Image Generation",
+    "is_active": true,
+    "use": true,
+    "is_remote_tool": true
+  },
+  "code_interpreter": {
+    "name": "Code Interpreter",
+    "is_active": true,
+    "use": false,
+    "is_remote_tool": false,
+    "max_output": 2000
+  },
+  "web_browser": {
+    "name": "Web Browsing",
+    "is_active": false,
+    "use": false
+  },
+  "amap_weather": {
+    "name": "高德天气",
+    "is_active": true,
+    "use": false
+  },
+  "wordart_texture_generation": {
+    "name": "艺术字纹理生成",
+    "is_active": true,
+    "use": false
+  },
+  "web_search": {
+    "name": "Web Searching",
+    "is_active": false,
+    "use": false
+  }
+}
