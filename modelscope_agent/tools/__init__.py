@@ -18,6 +18,7 @@ from .web_browser import WebBrowser
 from .web_search import WebSearch
 from .wordart_tool import WordArtTexture
 from .query_trips import QueryTrips
+from .order_trips import OrderTrips
 
 TOOL_INFO_LIST = {
     'modelscope_text-translation-zh2en': 'TranslationZh2EnTool',
@@ -35,4 +36,5 @@ TOOL_INFO_LIST = {
     'web_search': 'WebSearch',
     'web_browser': 'WebBrowser',
     'query_trips': 'QueryTrips',
+    "order_trips": "OrderTrips",
 }

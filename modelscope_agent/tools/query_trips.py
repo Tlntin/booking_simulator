@@ -6,8 +6,10 @@ import sqlite3
 
 
 class QueryTrips(Tool):
-    description = "用于查询火车票，询问用户车票类型时，请务必告诉用户有哪些车票类型。"
+    description = "用于查询火车票，当助手询问用户需要哪些车票类型时，请务必告诉用户有哪些车票类型。"
     description += "当用户提供完所有信息车票信息后，请立即调用该工具。"
+    description += "不要让用户等待，也不要说正在查询，需要调用该工具的时候立刻调用。"
+    description += "用户已经提供的信息，尽量不要做二次询问。"
     description += """
     下面是一个简单的对话场景：
     <用户>: 帮我看看后天的票
@@ -76,6 +78,18 @@ class QueryTrips(Tool):
         if date <= now_date:
             result = f"无法订购日期为{date}的车票，时间非法"
             return {"result": result}
+        try:
+            query_date = datetime.datetime.strptime(date, "%Y-%m-%d")
+            now_date = datetime.datetime.now()
+            if query_date.day - now_date.day > 14:
+                result = f"当前只能预定14天内的车票，请您重新选择日期。"
+                print(result)
+                return {"result": result}
+        except:
+            result = f"输入的日期格式不对，您可以输入像2023-12-03这样格式的日期哈"
+            print(result)
+            return {"result": result}
+
         # -- first find station
         station_from_list = self.find_station(cursor, station_from)
         station_to_list = self.find_station(cursor, station_to)
@@ -93,12 +107,14 @@ class QueryTrips(Tool):
         sql2 = """
         SELECT x.code, x.station_from, x.station_to,
         x."start", x."end", x."type",
-        s.longitude, s.latitude, s2.longitude, s2.latitude
+        x.second_class_price,
+        x.first_class_price,
+        x.business_class_price,
+        x.no_seat_price,
+        x.hard_seat_price,
+        x.hard_sleeper_price,
+        x.soft_sleeper_price
         FROM trips x
-        left join station s
-        on x.station_from = s.name
-        left join station s2 
-        on x.station_to = s2.name
         WHERE x.station_from in {} and x.station_to in {}
         """.format(tuple(station_from_list), tuple(station_to_list))
         if "高铁" in tripe_type:
@@ -124,70 +140,62 @@ class QueryTrips(Tool):
                 }
                 # 对于高铁
                 # get distance
-                distance = ((data[6] - data[8]) ** 2 + (data[7] - data[9]) ** 2) ** 0.5
                 price_data = []
                 if data[5] == 1:
                     # 二等座
-                    price1 = round(distance * 50)
                     number1 = random.randint(10, 200)
                     price_dict = {
                         "type": "二等座",
-                        "price": price1,
+                        "price": data[6],
                         "number": number1
                     }
                     price_data.append(price_dict)
                     # 一等座
-                    price2 = round(price1 * 1.5)
                     number2 = random.randint(10, 200)
                     price_dict = {
                         "type": "一等座",
-                        "price": price2,
+                        "price": data[7],
                         "number": number2
                     }
                     price_data.append(price_dict)
                     # 商务座
-                    price3 = round(price1 * 3)
                     number3 = random.randint(50, 100)
                     price_dict = {
                         "type": "商务座",
-                        "price": price3,
+                        "price": data[8],
                         "number": number3
                     }
                     price_data.append(price_dict)
                 else:
                     # 无座
-                    price1 = round(distance * 20)
                     number1 = random.randint(100, 200)
                     price_dict = {
                         "type": "无座",
-                        "price": price1,
+                        "price": data[9],
                         "number": number1
                     }
                     price_data.append(price_dict)
                     # 硬座
-                    price2 = price1
                     number2 = random.randint(0, 100)
                     price_dict = {
                         "type": "无座",
-                        "price": price2,
+                        "price": data[10],
                         "number": number2
                     }
                     price_data.append(price_dict)
                     # 硬卧
-                    price3 = price1 * 2
                     number3 = random.randint(50, 200)
                     price_dict = {
                         "type": "硬卧",
-                        "price": price3,
+                        "price": data[11],
                         "number": number3
                     }
                     price_data.append(price_dict)
                     # 软卧
-                    price4 = price1 * 4
                     number4 = random.randint(50, 200)
                     price_dict = {
                         "type": "软卧",
-                        "price": price4,
+                        "price": data[12],
                         "number": number4
                     }
                     price_data.append(price_dict)
