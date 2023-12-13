@@ -1,8 +1,9 @@
 import copy
 import os
 import re
-
+from datetime import datetime
 import json
+import pytz
 from config_utils import get_user_cfg_file
 from modelscope_agent.prompt.prompt import (KNOWLEDGE_INTRODUCTION_PROMPT,
                                             KNOWLEDGE_PROMPT, LengthConstraint,
@@ -297,6 +298,13 @@ def parse_role_config(config: dict):
         if prompt[-1] == '；':
             prompt = prompt[:-1]
     prompt += '\n下面你将开始扮演'
+    eastern_eight_zone = pytz.timezone('Asia/Shanghai')
+
+    # 获取东八区的当前时间
+    eastern_time = datetime.now(eastern_eight_zone)
+    # 格式化时间
+    formatted_time = eastern_time.strftime("%Y-%m-%d %H:%M")
+    prompt += f"\n当前时间是：{formatted_time}"
     if 'name' in config and config['name']:
         prompt += config['name']
     prompt += '，明白了请说“好的。”，不要说其他的。'

@@ -40,6 +40,10 @@ class Tool:
     def __init__(self, cfg={}):
         self.cfg = cfg.get(self.name, {})
         self.is_remote_tool = self.cfg.get('is_remote_tool', False)
+        self.project_dir = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+        self.db_path = os.path.join(self.project_dir, "data", "sqlite.db")
 
         # remote call
         self.url = self.cfg.get('url', '')
