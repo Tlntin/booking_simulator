@@ -9,16 +9,8 @@ from config_utils import get_avatar_image, get_ci_dir, parse_configuration
 from gradio_utils import ChatBot, format_cover_html
 from user_core import init_user_chatbot_agent
 
-uuid_str = 'local_user'
-builder_cfg, model_cfg, tool_cfg, available_tool_list, _, _ = parse_configuration(
-    uuid_str)
-suggests = builder_cfg.get('prompt_recommend', [])
-avatar_pairs = get_avatar_image(builder_cfg.get('avatar', ''), uuid_str)
+# uuid_str = 'local_user'
 
-customTheme = gr.themes.Default(
-    primary_hue=gr.themes.utils.colors.blue,
-    radius_size=gr.themes.utils.sizes.radius_none,
-)
 
 
 def check_uuid(uuid_str):
@@ -33,7 +25,7 @@ def check_uuid(uuid_str):
 def init_user(state):
     try:
         seed = state.get('session_seed', random.randint(0, 1000000000))
-        user_agent = init_user_chatbot_agent(uuid_str)
+        user_agent = init_user_chatbot_agent(uuid_str.value)
         user_agent.seed = seed
         state['user_agent'] = user_agent
     except Exception as e:
@@ -43,11 +35,25 @@ def init_user(state):
 
 
 # 创建 Gradio 界面
-demo = gr.Blocks(css='assets/appBot.css', theme=customTheme)
+customTheme = gr.themes.Default(
+    primary_hue=gr.themes.utils.colors.blue,
+    radius_size=gr.themes.utils.sizes.radius_none,
+)
+demo = gr.Blocks(css='assets/app.css', theme=customTheme)
 with demo:
-    gr.Markdown(
-        '# <center> \N{fire} AgentFabric powered by Modelscope-agent ([github star](https://github.com/modelscope/modelscope-agent/tree/main))</center>'  # noqa E501
-    )
+    # gr.Markdown(
+    #     '# <center> \N{fire} AgentFabric powered by Modelscope-agent ([github star](https://github.com/modelscope/modelscope-agent/tree/main))</center>'  # noqa E501
+    # )
+    uuid_str = gr.Textbox(label='modelscope_uuid', visible=True)
+    print("uuid_str before", uuid_str.value)
+    uuid_value = check_uuid(uuid_str.value)
+    print("uuid_str after", uuid_str.value)
+    uuid_str.value = uuid_value
+    builder_cfg, model_cfg, tool_cfg, available_tool_list, _, _ = parse_configuration(
+        uuid_str.value)
+    suggests = builder_cfg.get('prompt_recommend', [])
+    avatar_pairs = get_avatar_image(builder_cfg.get('avatar', ''), uuid_str.value)
+
     draw_seed = random.randint(0, 1000000000)
     state = gr.State({'session_seed': draw_seed})
     with gr.Row(elem_classes='container'):
