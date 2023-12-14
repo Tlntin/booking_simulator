@@ -1,8 +1,10 @@
 import datetime
+import json
 import random
+import os
+import sqlite3
 
 from .tool import Tool
-import sqlite3
 
 
 class OrderTrips(Tool):
@@ -48,11 +50,6 @@ class OrderTrips(Tool):
             "name": "passengers_name",
             "description": "乘车人姓名。",
             "required": True,
-        },
-        {
-            "name": "passengers_idcard",
-            "description": "乘车人身份证号码（可选），如果填写则必须是13位数字，最后一位可以为字母X",
-            "required": False,
         },
         {
             "name": "trips_numer",
@@ -111,13 +108,26 @@ class OrderTrips(Tool):
         return dict1
 
     def _local_call(self, *args, **kwargs):
+        uuid_str = kwargs["uuid_str"]
+        print("uuid str", uuid_str)
+        default_agent_dir = '/tmp/agentfabric'
+        default_builder_config_dir = os.path.join(default_agent_dir, 'config')
+        model_cfg_file = os.getenv('BUILDER_CONFIG_DIR', default_builder_config_dir)
+        uuid_dir = os.path.join(model_cfg_file, uuid_str)
+        print("uuid_dir", uuid_dir)
+        order_path = os.path.join(uuid_dir, "order.json")
+        # -- load old order -- #
+        if os.path.exists(order_path):
+            with open(order_path, "rt") as f:
+                order_list = json.load(f)
+        else:
+            order_list = []
         date = kwargs['date']
         now_date = datetime.datetime.now().strftime("%Y-%m-%d")
         train_code = kwargs["train_code"]
         seat_type = kwargs["seat_type"]
-        seat_position = kwargs.get("seat_position", None)
-        passengers_name = kwargs.get("passengers_name", None)
-        passengers_idcard = kwargs.get("passengers_idcard", None)
+        seat_position = kwargs.get("seat_position", "")
+        passengers_name = kwargs.get("passengers_name", "")
         trips_numer = kwargs.get("trips_numer", 1)
         if trips_numer != 1:
             result = "当前每次仅支持订一张票"
@@ -181,6 +191,15 @@ class OrderTrips(Tool):
             cursor.close()
             db.close()
             return {"result": result}
+        # validate order has conflict
+        for temp in order_list:
+            if temp["date"] == date:
+                if temp["start"] <= trips_data["start"] <= temp["end"]:
+                    result = "当天已经存在一个即将出行的行程，该订单与其存在时间冲突或重复。"
+                    print(result)
+                    cursor.close()
+                    db.close()
+                    return result
         price_dict = trips_data["price_data"]
         if "二等" in seat_type:
             price = price_dict.get("second_class")
@@ -249,6 +268,7 @@ class OrderTrips(Tool):
 
         result_dict = {
             "code": trips_data["code"],
+            "date": date,
             "station_from": trips_data["station_from"],
             "station_to": trips_data["station_to"],
             "start": trips_data["start"],
@@ -262,7 +282,9 @@ class OrderTrips(Tool):
             # "passengers_idcard": passengers_idcard[:6] + "*" * 6 + passengers_idcard[-4: ]
         }
         # -- save order -- #
-        # todo
+        order_list.append(result_dict)
+        with open(order_path, "wt") as f:
+            json.dump(order_list, f, ensure_ascii=False, indent=4)
         return {"result": result_dict}
 
 

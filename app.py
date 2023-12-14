@@ -24,10 +24,11 @@ customTheme = gr.themes.Default(
 
 def check_uuid(uuid_str):
     if not uuid_str or uuid_str == '':
-        if os.getenv('MODELSCOPE_ENVIRONMENT') == 'studio':
-            raise gr.Error('请登陆后使用! (Please login first)')
-        else:
-            uuid_str = 'local_user'
+        # if os.getenv('MODELSCOPE_ENVIRONMENT') == 'studio':
+        #     raise gr.Error('请登陆后使用! (Please login first)')
+        # else:
+        #     uuid_str = 'local_user'
+        uuid_str = str(random.randint(10 ** 12, 10 ** 13))
     return uuid_str
 
 
@@ -51,15 +52,15 @@ def init_user(uuid_str, state):
     except Exception as e:
         error = traceback.format_exc()
         print(f'Error:{e}, with detail: {error}')
-    return state
+    return [uuid_str, state]
 
 
 # 创建 Gradio 界面
-customTheme = gr.themes.Default(
-    primary_hue=gr.themes.utils.colors.blue,
-    radius_size=gr.themes.utils.sizes.radius_none,
-)
-demo = gr.Blocks(css='assets/app.css', theme=customTheme)
+# customTheme = gr.themes.Default(
+#     primary_hue=gr.themes.utils.colors.blue,
+#     radius_size=gr.themes.utils.sizes.radius_none,
+# )
+demo = gr.Blocks(css='assets/appBot.css', theme=customTheme)
 with demo:
     # gr.Markdown(
     #     '# <center> \N{fire} AgentFabric powered by Modelscope-agent ([github star](https://github.com/modelscope/modelscope-agent/tree/main))</center>'  # noqa E501
@@ -104,41 +105,41 @@ with demo:
                     examples=suggests,
                     inputs=[preview_chat_input])
             with gr.Column(scale=1):
-                uuid_str2 = gr.Textbox(label='modelscope_uuid', visible=True)
+                uuid_str2 = gr.Textbox(label='modelscope_uuid', visible=False)
 
-    def upload_file(chatbot, upload_button, _state):
-        _uuid_str = check_uuid(uuid_str)
-        new_file_paths = []
-        if 'file_paths' in _state:
-            file_paths = _state['file_paths']
-        else:
-            file_paths = []
-        for file in upload_button:
-            file_name = os.path.basename(file.name)
-            # covert xxx.json to xxx_uuid_str.json
-            file_name = file_name.replace('.', f'_{_uuid_str}.')
-            file_path = os.path.join(get_ci_dir(), file_name)
-            if not os.path.exists(file_path):
-                # make sure file path's directory exists
-                os.makedirs(os.path.dirname(file_path), exist_ok=True)
-                shutil.copy(file.name, file_path)
-                file_paths.append(file_path)
-            new_file_paths.append(file_path)
-            chatbot.append((None, f'上传文件{file_name}，成功'))
-        yield {
-            user_chatbot: gr.Chatbot.update(visible=True, value=chatbot),
-            preview_chat_input: gr.Textbox.update(value='')
-        }
+    # def upload_file(chatbot, upload_button, _state):
+    #     _uuid_str = check_uuid(uuid_str)
+    #     new_file_paths = []
+    #     if 'file_paths' in _state:
+    #         file_paths = _state['file_paths']
+    #     else:
+    #         file_paths = []
+    #     for file in upload_button:
+    #         file_name = os.path.basename(file.name)
+    #         # covert xxx.json to xxx_uuid_str.json
+    #         file_name = file_name.replace('.', f'_{_uuid_str}.')
+    #         file_path = os.path.join(get_ci_dir(), file_name)
+    #         if not os.path.exists(file_path):
+    #             # make sure file path's directory exists
+    #             os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    #             shutil.copy(file.name, file_path)
+    #             file_paths.append(file_path)
+    #         new_file_paths.append(file_path)
+    #         chatbot.append((None, f'上传文件{file_name}，成功'))
+    #     yield {
+    #         user_chatbot: gr.Chatbot.update(visible=True, value=chatbot),
+    #         preview_chat_input: gr.Textbox.update(value='')
+    #     }
 
-        _state['file_paths'] = file_paths
-        _state['new_file_paths'] = new_file_paths
+    #     _state['file_paths'] = file_paths
+    #     _state['new_file_paths'] = new_file_paths
 
     # upload_button.upload(
     #     upload_file,
     #     inputs=[user_chatbot, upload_button, state],
     #     outputs=[user_chatbot, preview_chat_input])
 
-    def send_message(chatbot, input, _state):
+    def send_message(_uuid_str, chatbot, input, _state):
         # 将发送的消息添加到聊天历史
         user_agent = _state['user_agent']
         if 'new_file_paths' in _state:
@@ -148,6 +149,7 @@ with demo:
         _state['new_file_paths'] = []
         chatbot.append((input, ''))
         yield {
+            uuid_str2: _uuid_str,
             user_chatbot: chatbot,
             preview_chat_input: gr.Textbox.update(value=''),
         }
@@ -155,7 +157,7 @@ with demo:
         response = ''
 
         for frame in user_agent.stream_run(
-                input, print_info=True, remote=False,
+                _uuid_str, input, print_info=True, remote=False,
                 append_files=new_file_paths):
             # is_final = frame.get("frame_is_final")
             llm_result = frame.get('llm_text', '')
@@ -179,15 +181,15 @@ with demo:
 
     preview_send_button.click(
         send_message,
-        inputs=[user_chatbot, preview_chat_input, state],
-        outputs=[user_chatbot, preview_chat_input])
+        inputs=[uuid_str2, user_chatbot, preview_chat_input, state],
+        outputs=[uuid_str2, user_chatbot, preview_chat_input])
 
     def init_all(_uuid_str, _state):
         print("call init all")
         _uuid_str = check_uuid(_uuid_str)
-        builder_cfg, model_cfg, tool_cfg, available_tool_list, _, _ = parse_configuration(
-            _uuid_str)
-        init_user(_uuid_str, _state)
+        # builder_cfg, model_cfg, tool_cfg, available_tool_list, _, _ = parse_configuration(
+        #     _uuid_str)
+        [_uuid_str, _state] = init_user(_uuid_str, _state)
         print("call finish")
         return [_uuid_str, _state]
 

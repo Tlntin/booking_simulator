@@ -75,6 +75,8 @@ class QueryTrips(Tool):
         return station_list
 
     def _local_call(self, *args, **kwargs):
+        uuid_str = kwargs["uuid_str"]
+        print("uuid str", uuid_str)
         date = kwargs['date']
         now_date = datetime.datetime.now().strftime("%Y-%m-%d")
         station_from = kwargs["station_from"].rstrip("站")

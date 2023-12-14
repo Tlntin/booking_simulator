@@ -211,6 +211,7 @@ class AgentExecutor:
             display(llm_result, exec_result, idx, self.agent_type)
 
     def stream_run(self,
+                   uuid_str: str,
                    task: str,
                    remote: bool = True,
                    print_info: bool = False,
@@ -219,6 +220,7 @@ class AgentExecutor:
         It will yield the result of each interaction, so that the caller can display the result
 
         Args:
+            uuid_str: str,
             task (str): concrete task
             remote (bool, optional): whether to execute tool in remote mode. Defaults to True.
             print_info (bool, optional): whether to print prompt info. Defaults to False.
@@ -284,6 +286,7 @@ class AgentExecutor:
                 action_args = self.parse_action_args(action_args)
                 tool = self.tool_list[action]
 
+                action_args["uuid_str"] = uuid_str
                 # TODO @wenmeng.zwm remove this hack logic for image generation
                 if action == 'image_gen' and self.seed:
                     action_args['seed'] = self.seed
