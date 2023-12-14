@@ -20,6 +20,7 @@ from .wordart_tool import WordArtTexture
 from .query_trips import QueryTrips
 from .order_trips import OrderTrips
 from .add_passengers import AddPassengers
+from .query_orders import QueryOrders
 
 TOOL_INFO_LIST = {
     'modelscope_text-translation-zh2en': 'TranslationZh2EnTool',
@@ -38,5 +39,6 @@ TOOL_INFO_LIST = {
     'web_browser': 'WebBrowser',
     'query_trips': 'QueryTrips',
     "order_trips": "OrderTrips",
-    "add_passengers": "AddPassengers"
+    "add_passengers": "AddPassengers",
+    "query_orders": "QueryOrders"
 }
