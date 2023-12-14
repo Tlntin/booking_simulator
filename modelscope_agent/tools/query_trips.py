@@ -1,7 +1,7 @@
 import datetime
 import random
 
-from .tool import Tool
+from modelscope_agent.tools import Tool
 import sqlite3
 
 
