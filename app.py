@@ -31,7 +31,18 @@ def check_uuid(uuid_str):
     return uuid_str
 
 
-def init_user(state):
+# def init_user(state):
+#     try:
+#         seed = state.get('session_seed', random.randint(0, 1000000000))
+#         user_agent = init_user_chatbot_agent(uuid_str)
+#         user_agent.seed = seed
+#         state['user_agent'] = user_agent
+#     except Exception as e:
+#         error = traceback.format_exc()
+#         print(f'Error:{e}, with detail: {error}')
+#     return state
+
+def init_user(uuid_str, state):
     try:
         seed = state.get('session_seed', random.randint(0, 1000000000))
         user_agent = init_user_chatbot_agent(uuid_str)
@@ -171,7 +182,17 @@ with demo:
         inputs=[user_chatbot, preview_chat_input, state],
         outputs=[user_chatbot, preview_chat_input])
 
-    demo.load(init_user, inputs=[state], outputs=[state])
+    def init_all(_uuid_str, _state):
+        print("call init all")
+        _uuid_str = check_uuid(_uuid_str)
+        builder_cfg, model_cfg, tool_cfg, available_tool_list, _, _ = parse_configuration(
+            _uuid_str)
+        init_user(_uuid_str, _state)
+        print("call finish")
+        return [_uuid_str, _state]
+
+    # demo.load(init_user, inputs=[state], outputs=[state])
+    demo.load(init_all, inputs=[uuid_str2, state], outputs=[uuid_str2, state])
 
 demo.queue()
 demo.launch()
