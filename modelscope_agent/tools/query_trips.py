@@ -71,12 +71,14 @@ class QueryTrips(Tool):
         now_date = datetime.datetime.now().strftime("%Y-%m-%d")
         station_from = kwargs["station_from"].rstrip("站")
         station_to = kwargs["station_to"].rstrip("站")
-        tripe_type = kwargs["trips_type"]
+        tripe_type = kwargs.get("trips_type", "都可以")
         print("db_path", self.db_path)
         db = sqlite3.connect(self.db_path)
         cursor = db.cursor()
         if date <= now_date:
             result = f"无法订购日期为{date}的车票，时间非法"
+            cursor.close()
+            db.close()
             return {"result": result}
         try:
             query_date = datetime.datetime.strptime(date, "%Y-%m-%d")
@@ -84,10 +86,14 @@ class QueryTrips(Tool):
             if query_date.day - now_date.day > 14:
                 result = f"当前只能预定14天内的车票，请您重新选择日期。"
                 print(result)
+                cursor.close()
+                db.close()
                 return {"result": result}
         except:
             result = f"输入的日期格式不对，您可以输入像2023-12-03这样格式的日期哈"
             print(result)
+            cursor.close()
+            db.close()
             return {"result": result}
 
         # -- first find station
@@ -96,14 +102,20 @@ class QueryTrips(Tool):
         if len(station_from_list) == 0:
             result = f"暂时没有找到{station_from}站相关车票数据，可能是您输入错误，或者我们数据老旧（当前数据截止到2016年3月）导致的"
             print(result)
+            cursor.close()
+            db.close()
             return {"result": result}
         elif len(station_to_list) == 0:
             result = f"暂时没有找到{station_to}站相关车票数据，可能是您输入错误，或者我们数据老旧（当前数据截止到2016年3月）导致的"
             print(result)
+            cursor.close()
+            db.close()
             return {"result": result}
+        print("date", date)
         temp_str = f'你的出发日期是：{date}, 出发车站为：{station_from}, 到达车站为：{station_to}, 选择的车票类型是{tripe_type}'
         print(temp_str)
         # -- second get trips -- #
+
         sql2 = """
         SELECT x.code, x.station_from, x.station_to,
         x."start", x."end", x."type",
@@ -115,18 +127,37 @@ class QueryTrips(Tool):
         x.hard_sleeper_price,
         x.soft_sleeper_price
         FROM trips x
-        WHERE x.station_from in {} and x.station_to in {}
-        """.format(tuple(station_from_list), tuple(station_to_list))
+        WHERE
+        """
+        if len(station_from_list) > 1 and len(station_to_list) > 1:
+            sql2 += "x.station_from in {} and x.station_to in {}".format(
+                tuple(station_from_list), tuple(station_to_list)
+            )
+        elif len(station_from_list) > 1 and len(station_to_list) == 1:
+            sql2 += "x.station_from in {} and x.station_to = '{}'".format(
+                tuple(station_from_list), station_to_list[0]
+            )
+        elif len(station_from_list) == 1 and len(station_to_list) > 1:
+            sql2 += "x.station_from = '{}' and x.station_to in {}".format(
+                station_from_list[0], tuple(station_to_list)
+            )
+        elif len(station_from_list) == 1 and len(station_to_list) == 1:
+            sql2 += "x.station_from = '{}' and x.station_to == '{}'".format(
+                station_from_list[0], station_to_list[0]
+            )
+
         if "高铁" in tripe_type:
             sql2 += ' and x."type" = 1'
         elif "普通" in tripe_type:
-            sql2 += ' and x."type" = 1'
+            sql2 += ' and x."type" = 0'
         print(sql2)
         cursor.execute(sql2)
         data_list = cursor.fetchall()
         print("执行sql完成")
         if len(data_list) == 0:
             result = f"暂时没有找到{station_from}站到{station_to}相关车票数据，可能是您输入错误，或者我们数据老旧（当前数据截止到2016年3月）导致的"
+            cursor.close()
+            db.close()
             return {"result": result}
         else:
             data_list2 = []
@@ -201,4 +232,6 @@ class QueryTrips(Tool):
                     price_data.append(price_dict)
                 tripe_dict["price_data"] = price_data
                 data_list2.append(tripe_dict)
+            cursor.close()
+            db.close()
             return {"result": data_list2}

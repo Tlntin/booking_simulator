@@ -304,7 +304,10 @@ def parse_role_config(config: dict):
     eastern_time = datetime.now(eastern_eight_zone)
     # 格式化时间
     formatted_time = eastern_time.strftime("%Y-%m-%d %H:%M")
-    prompt += f"\n当前时间是：{formatted_time}"
+    formatted_weekday = eastern_time.weekday()
+    if formatted_weekday == 0:
+        formatted_weekday = "日"
+    prompt += f"\n当前时间是：{formatted_time}，星期{formatted_weekday}。"
     if 'name' in config and config['name']:
         prompt += config['name']
     prompt += '，明白了请说“好的。”，不要说其他的。'
