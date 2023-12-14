@@ -19,6 +19,11 @@ class QueryTrips(Tool):
     <用户>: 高铁
     <助手>: 正在为您调用接口...
     """
+    description += """
+    下面是一个简单的对话场景：
+    <用户>: 帮我查询一下后天广州到北京的高铁票？
+    <助手>: 正在为您调用接口...
+    """
     name = "query_trips"
     # 需要的参数
     parameters: list = [
@@ -61,6 +66,9 @@ class QueryTrips(Tool):
         :return:
         """
         sql = f'SELECT x.name FROM station x where name like "%{name}%"'
+        print("Find station SQL.")
+        print(sql)
+        
         cursor.execute(sql)
         data = cursor.fetchall()
         station_list = [da[0] for da in data]
@@ -121,6 +129,7 @@ class QueryTrips(Tool):
             sql2 += ' and x."type" = 1'
         elif "普通" in tripe_type:
             sql2 += ' and x."type" = 1'
+        print("Find ticket SQL.")
         print(sql2)
         cursor.execute(sql2)
         data_list = cursor.fetchall()
