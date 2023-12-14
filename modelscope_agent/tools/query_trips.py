@@ -68,7 +68,6 @@ class QueryTrips(Tool):
         sql = f'SELECT x.name FROM station x where name like "%{name}%"'
         print("Find station SQL.")
         print(sql)
-        
         cursor.execute(sql)
         data = cursor.fetchall()
         station_list = [da[0] for da in data]
