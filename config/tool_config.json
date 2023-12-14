@@ -41,5 +41,10 @@
     "name": "火车票订购",
     "is_active": true,
     "use": true
+  },
+  "add_passengers": {
+    "name": "新增乘客",
+    "is_active": true,
+    "use": true
   }
 }

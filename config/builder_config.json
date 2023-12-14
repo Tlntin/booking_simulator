@@ -6,7 +6,8 @@
   "prompt_recommend": [
     "你有什么功能？",
     "帮我看一下明天的，广州到北京的高铁火车票，还有没有",
-    "帮我订一张后天的，广州到北京的票"
+    "帮我订一张后天的，广州到北京的票",
+    "帮我新增一个乘客，张三；身份证号码是400319199801128522"
   ],
   "knowledge": [],
   "tools": {
@@ -27,6 +28,11 @@
     },
     "order_trips": {
       "name": "火车票订购",
+      "is_active": true,
+      "use": true
+    },
+    "add_passengers": {
+      "name": "新增乘客",
       "is_active": true,
       "use": true
     }

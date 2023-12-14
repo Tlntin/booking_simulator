@@ -10,6 +10,7 @@ class QueryTrips(Tool):
     description += "当用户提供完所有信息车票信息后，请立即调用该工具。"
     description += "不要让用户等待，也不要说正在查询，需要调用该工具的时候立刻调用。"
     description += "用户已经提供的信息，尽量不要做二次询问。"
+    description += "查询完成后，请向用户介绍对应的车次，开车与到达时间，路途耗时，有什么座位以及对应的价格。"
     description += """
     下面是一个简单的对话场景：
     <用户>: 帮我看看后天的票
@@ -217,7 +218,7 @@ class QueryTrips(Tool):
                     # 硬座
                     number2 = random.randint(0, 100)
                     price_dict = {
-                        "type": "无座",
+                        "type": "硬座",
                         "price": data[10],
                         "number": number2
                     }
