@@ -7,7 +7,7 @@ class QueryOrders(Tool):
     description += "当用户提供完个人信息后，请立即调用该工具。"
     description += """
     下面是一个简单的对话场景：
-    <用户>: 帮我查询一下乘客梁嘉曦的订票信息
+    <用户>: 帮我查询一下乘客张三的订票信息
     <助手>: 正在为您调用接口...
     """
     name = "query_orders"
