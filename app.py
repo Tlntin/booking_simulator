@@ -59,7 +59,7 @@ customTheme = gr.themes.Default(
     primary_hue=gr.themes.utils.colors.blue,
     radius_size=gr.themes.utils.sizes.radius_none,
 )
-demo = gr.Blocks(css='assets/appBot.css', theme=customTheme)
+demo = gr.Blocks(css='assets/app.css', theme=customTheme)
 with demo:
     # gr.Markdown(
     #     '# <center> \N{fire} AgentFabric powered by Modelscope-agent ([github star](https://github.com/modelscope/modelscope-agent/tree/main))</center>'  # noqa E501
