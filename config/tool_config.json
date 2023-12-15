@@ -44,8 +44,8 @@
   },
   "add_passengers": {
     "name": "新增乘客",
-    "is_active": true,
-    "use": true
+    "is_active": false,
+    "use": false
   },
   "query_orders": {
     "name": "查询订单",
@@ -54,8 +54,8 @@
   },
   "show_passengers": {
     "name": "展示乘客信息",
-    "is_active": true,
-    "use": true
+    "is_active": false,
+    "use": false
   },
   "refund_tickets": {
     "name": "退票",

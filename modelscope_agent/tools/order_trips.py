@@ -2,33 +2,34 @@ import datetime
 import json
 import random
 import os
+import re
 import sqlite3
 
 from .tool import Tool
 
 
 class OrderTrips(Tool):
-    description = "用于订购车票。"
-    description += "当用户提供完所有订票相关信息后，请立即调用该工具。"
+    description = "划重点：该工具用于订购车票。"
+    # description += "当用户提供完所有订票相关信息后，请立即调用该工具。"
     description += "需要先完成车票查询任务，才能订购车票。"
-    description += "如果用户直接订购车票，先帮他查一下车票"
+    # description += "如果用户直接订购车票，先帮他查一下车票"
     description += """
     补充信息：
     座位类型：对于高铁，可选二等座/一等座/商务座；对于普通火车，可选无座/硬座/硬卧/软卧。
-    座位位置：有5个位置，分别为左侧的`A`/`B`/`C`位, 以及右侧的`E`/`F`位; 其中`A`和`F`为靠窗座位，`C`和`E`为靠过道座位。当你询问用户做哪个位置的时候，记得告诉用户这些位置的特点。
+    座位位置：有5个位置，分别为左侧的`A`/`B`/`C`位, 以及右侧的`E`/`F`位; 其中`A`和`F`为靠窗座位，`C`和`E`为靠过道座位。
     """
-    description += "请你耐心检查用户输入，对于用户未输入的信息，请用对老年人的尊敬的语气询问用户其缺失的信息。"
-    description += "注意：当用户信息未提供完整时，等待用户输入完成后，再调用该工具。"
-    description += "订票成功后，请告诉用户订票人，车次，出发站，到达站，开车时间，到达时间，座位类型，车厢号，座位号。"
-    description += """
-    下面是一个简单的对话场景：
-    <用户>: 帮我订购明天的，G32车次的，二等座
-    <客服>：好的，请问乘车人是？
-    
-    下面是一个简单的对话场景：
-    <用户>：帮我订一张明天的，广州到北京的票
-    <客服>: 好的，即将查询剩余车票。
-    """
+    # description += "请你耐心检查用户输入，对于用户未输入的信息，请用对老年人的尊敬的语气询问用户其缺失的信息。"
+    # description += "注意：当用户信息未提供完整时，等待用户输入完成后，再调用该工具。"
+    description += "订票成功后，请告诉用户车次，出发站，到达站，开车时间，到达时间，座位类型，车厢号，座位号。"
+    # description += """
+    # 下面是一个简单的对话场景：
+    # <用户>: 帮我订购明天的，G32车次的，二等座
+    # <客服>：好的，请问乘车人是？
+    #
+    # 下面是一个简单的对话场景：
+    # <用户>：帮我订一张明天的，广州到北京的票
+    # <客服>: 好的，即将查询剩余车票。
+    # """
     name = "order_trips"
     # 需要的参数
     parameters: list = [
@@ -47,21 +48,26 @@ class OrderTrips(Tool):
             "description": "座位类型",
             "required": True,
         },
-        {
-            "name": "passengers_name",
-            "description": "乘车人姓名。",
-            "required": True,
-        },
+        # {
+        #     "name": "passengers_name",
+        #     "description": "乘车人姓名。",
+        #     "required": True,
+        # },
+        # {
+        #     "name": "passengers_idcard",
+        #     "description": "乘车人身份证号。",
+        #     "required": False,
+        # },
         {
             "name": "seat_position",
             "description": "座位位置。",
             "required": True,
         },
-        {
-            "name": "trips_numer",
-            "description": "订票数量。",
-            "required": False,
-        }
+        # {
+        #     "name": "trips_numer",
+        #     "description": "订票数量。",
+        #     "required": False,
+        # }
     ]
 
     def __call__(self, remote=False, *args, **kwargs):
@@ -133,39 +139,56 @@ class OrderTrips(Tool):
         train_code = kwargs["train_code"]
         seat_type = kwargs["seat_type"]
         seat_position = kwargs.get("seat_position", "")
-        passengers_name = kwargs.get("passengers_name", "")
-        trips_numer = kwargs.get("trips_numer", 1)
-        if passengers_name is None or passengers_name == "":
-            result = "警告：请您提供乘车人姓名。"
-            print(result)
-            return {"result": result}
+        # passengers_name = kwargs.get("passengers_name", "")
+        # passengers_idcard = kwargs.get("passengers_idcard", "")
+        # trips_numer = kwargs.get("trips_numer", 1)
+        # if passengers_name is None or passengers_name == "":
+        #     result = "警告：请您提供乘车人姓名。"
+        #     print(result)
+        #     return {"result": result}
+        # # valid passengers_idcard
+        # if len(passengers_idcard) > 0:
+        #     p = re.compile(
+        #         "^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$")
+        #     res1 = p.match(passengers_idcard)
+        #     if res1 is None:
+        #         result = f"警告：乘客{passengers_name}的身份证信息有误，需要先添加乘客信息，才能继续购票。"
+        #         print(result)
+        #         return {"result": result}
+        # new_data = {"name": passengers_name, "idcard": passengers_idcard}
         # load passengers informations
-        print("get passengers infomation")
-        passengers_path = os.path.join(uuid_dir, "passengers.json")
-        if os.path.exists(passengers_path):
-            with open(passengers_path, "rt", encoding="utf-8") as f:
-                passengers_list = json.load(f)
-                print("passengers_list", passengers_list)
-                passengers_list = [
-                    temp for temp in passengers_list
-                    if temp["name"] == passengers_name
-                ]
-                print("passengers_list", passengers_list)
-                if len(passengers_list) == 0:
-                    result = f"警告：您还没有录入过乘客{passengers_name}的信息，需要先添加乘客，才能继续购票。"
-                    print(result)
-                    return {"result": result}
-                else:
-                    passengers_dict = passengers_list[0]
-                    idcard = passengers_dict["idcard"]
-        else:
-            result = "警告：您还没有录入过任何乘客信息，需要先添加乘客，才能继续购票。"
-            print(result)
-            return {"result": result}
-        if trips_numer != 1:
-            result = "当前每次仅支持订一张票"
-            print(result)
-            return {"result": result}
+        # print("get passengers infomation")
+        # passengers_path = os.path.join(uuid_dir, "passengers.json")
+        # if os.path.exists(passengers_path):
+        #     with open(passengers_path, "rt", encoding="utf-8") as f:
+        #         passengers_list = json.load(f)
+        #         print("passengers_list", passengers_list)
+        #         # if user not provide idcard
+        #         if len(passengers_idcard) == 0:
+        #             passengers_list = [
+        #                 temp for temp in passengers_list
+        #                 if temp["name"] == passengers_name
+        #             ]
+        #             print("passengers_list", passengers_list)
+        #             if len(passengers_list) == 0:
+        #                 result = f"警告：您还没有录入过乘客{passengers_name}的信息，需要先添加乘客信息，才能继续购票。"
+        #                 print(result)
+        #                 return {"result": result}
+        #             else:
+        #                 passengers_dict = passengers_list[0]
+        #                 idcard = passengers_dict["idcard"]
+        #         else:
+        #             idcard = passengers_idcard
+        # elif len(passengers_idcard) == 0:
+        #     result = "警告：您还没有录入过任何乘客信息，需要先添加乘客，才能继续购票。"
+        #     print(result)
+        #     return {"result": result}
+        # else:
+        #     idcard = passengers_idcard
+        # if trips_numer != 1:
+        #     result = "当前每次仅支持订一张票"
+        #     print(result)
+        #     return {"result": result}
         if "A" in seat_position:
             seat_position = "A"
         elif "B" in seat_position:
@@ -309,8 +332,8 @@ class OrderTrips(Tool):
             "price": price,
             "carriage_number": random.randint(1, 18),
             "seat_number": str(random.randint(1, 24)) + seat_position,
-            "passengers_name": passengers_name,
-            "passengers_idcard": idcard,
+            # "passengers_name": passengers_name,
+            # "passengers_idcard": idcard,
         }
         # -- save order -- #
         order_list.append(result_dict)

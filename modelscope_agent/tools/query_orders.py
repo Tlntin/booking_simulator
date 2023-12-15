@@ -4,14 +4,14 @@ from .tool import Tool
 
 
 class QueryOrders(Tool):
-    description = "用于查询车票订单。"
-    description += "当用户提供完个人信息后，请立即调用该工具。"
-    description += "查询成功后，请告诉用户订票人，车次，出发日期，出发站，到达站，开车时间，到达时间，座位类型，车厢号，座位号。"
-    description += """
-    下面是一个简单的对话场景：
-    <用户>: 帮我查询一下我的订票信息
-    <助手>: 正在为您调用接口...
-    """
+    description = "划重点：该工具用于查询已购买车票订单。"
+    # description += "当用户提供完个人信息后，请立即调用该工具。"
+    description += "查询成功后，请告诉用户：车次，出发日期，出发站，到达站，开车时间，到达时间，座位类型，车厢号，座位号。"
+    # description += """
+    # 下面是一个简单的对话场景：
+    # <用户>: 帮我查询一下我的订票信息
+    # <助手>: 正在为您调用接口...
+    # """
     name = "query_orders"
     # 需要的参数
     parameters: list = [

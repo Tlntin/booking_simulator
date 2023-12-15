@@ -6,10 +6,10 @@ from .tool import Tool
 
 class ShowPassengers(Tool):
     name = "show_passengers"
-    description = "显示已有乘客信息"
+    description = "划重点：该工具用于显示已有乘客信息"
     description += "调用完成后，告诉用户已经录入了几个乘客，乘客姓名和身份证号。"
-    description += "如果用户没有录入任何乘客信息，可以询问用户是否添加新乘客。"
-    description += "警告：调用工具前不能发表看法，请等待调用完成后再根据返回结果回答用户问题。"
+    # description += "如果用户没有录入任何乘客信息，可以询问用户是否调用<add_passengers>工具添加新乘客。"
+    # description += "警告：调用工具前不能发表看法，请等待调用完成后再根据返回结果回答用户问题。"
     parameters = []
 
     def __call__(self, remote=False, *args, **kwargs):

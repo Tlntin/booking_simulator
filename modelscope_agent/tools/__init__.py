@@ -19,9 +19,9 @@ from .web_search import WebSearch
 from .wordart_tool import WordArtTexture
 from .query_trips import QueryTrips
 from .order_trips import OrderTrips
-from .add_passengers import AddPassengers
+# from .add_passengers import AddPassengers
 from .query_orders import QueryOrders
-from .show_passengers import ShowPassengers
+# from .show_passengers import ShowPassengers
 from .refund_tickets import RefundTickets
 
 TOOL_INFO_LIST = {

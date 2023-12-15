@@ -310,6 +310,7 @@ def parse_role_config(config: dict):
     temp_list = ["一", "二", "三", "四", "五", "六", "日"]
     formatted_weekday = temp_list[formatted_weekday]
     prompt += f"\n当前时间是：{formatted_time}，星期{formatted_weekday}。"
+    prompt += "你的数学很强，计算相对日期对你来说轻而易举。"
     if 'name' in config and config['name']:
         prompt += config['name']
     prompt += '，明白了请说“好的。”，不要说其他的。'
