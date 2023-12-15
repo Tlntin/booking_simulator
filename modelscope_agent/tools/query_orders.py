@@ -14,11 +14,11 @@ class QueryOrders(Tool):
     name = "query_orders"
     # 需要的参数
     parameters: list = [
-        {
-            "name": "passengers_name",
-            "description": "乘车人姓名。",
-            "required": False,
-        },
+        # {
+        #     "name": "passengers_name",
+        #     "description": "乘车人姓名。",
+        #     "required": False,
+        # },
     ]
     
     def __call__(self, remote=False, *args, **kwargs):
@@ -46,10 +46,10 @@ class QueryOrders(Tool):
         else:
             result = "没有查询到你的订单。"
             return {"result": result}
-        passengers_name = kwargs.get("passengers_name", "")
-        if len(passengers_name) > 0:
-            order_list = [
-                temp for temp in order_list
-                if temp["passengers_name"] == passengers_name
-            ]
+        # passengers_name = kwargs.get("passengers_name", "")
+        # if len(passengers_name) > 0:
+        #     order_list = [
+        #         temp for temp in order_list
+        #         if temp["passengers_name"] == passengers_name
+        #     ]
         return {"result": order_list}
