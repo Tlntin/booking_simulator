@@ -22,12 +22,12 @@ class AddPassengers(Tool):
     parameters = [
         {
             "name": "passengers_name",
-            "description": "乘车人姓名。如果未提供姓名，则要求用户输入姓名。",
+            "description": "乘车人姓名。",
             "required": True,
         },
         {
             "name": "passengers_idcard",
-            "description": "乘车人身份证号，如果填写则必须是13位数字，最后一位可以为字母X",
+            "description": "乘车人身份证号。",
             "required": True,
         }
     ]

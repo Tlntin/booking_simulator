@@ -128,7 +128,10 @@ class RefundTickets(Tool):
                     if info['code'] == code:
                         order_info['code'] = code
                         order_info['date'] = info['date']
-                        service_charge, refund = self.refund_rule(date, info['price'])
+                        order_info["start"] = info["start"]
+                        order_info["end"] = info["end"]
+                        order_time = info["date"] + " " + info["start"] + ":00"
+                        service_charge, refund = self.refund_rule(order_time, info['price'])
                         order_info['service_charge'] = service_charge
                         order_info['refund'] = refund
                         break
@@ -146,7 +149,10 @@ class RefundTickets(Tool):
                     if info['code'] == code and info['date'] == date:
                         order_info['code'] = code
                         order_info['date'] = info['date']
-                        service_charge, refund = self.refund_rule(date, info['price'])
+                        order_info["start"] = info["start"]
+                        order_info["end"] = info["end"]
+                        order_time = info["date"] + " " + info["start"] + ":00"
+                        service_charge, refund = self.refund_rule(order_time, info['price'])
                         order_info['service_charge'] = service_charge
                         order_info['refund'] = refund
                         break
