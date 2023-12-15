@@ -305,8 +305,8 @@ def parse_role_config(config: dict):
     # 格式化时间
     formatted_time = eastern_time.strftime("%Y-%m-%d %H:%M")
     formatted_weekday = eastern_time.weekday()
-    if formatted_weekday == 0:
-        formatted_weekday = "日"
+    temp_list = ["一", "二", "三", "四", "五", "六", "日"]
+    formatted_weekday = temp_list[formatted_weekday]
     prompt += f"\n当前时间是：{formatted_time}，星期{formatted_weekday}。"
     if 'name' in config and config['name']:
         prompt += config['name']

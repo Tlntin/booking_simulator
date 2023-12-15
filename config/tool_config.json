@@ -51,5 +51,10 @@
     "name": "查询订单",
     "is_active": true,
     "use": true
+  },
+  "show_passengers": {
+    "name": "展示乘客信息",
+    "is_active": true,
+    "use": true
   }
 }

@@ -95,7 +95,11 @@ with demo:
                 #         ],
                 #         file_count='multiple')
                 with gr.Column(min_width=70, scale=1):
-                    preview_send_button = gr.Button('发送', variant='primary')
+                    preview_send_button = gr.Button(
+                        '发送',
+                        variant='primary',
+                        visible=True
+                    )
         with gr.Row():
             with gr.Column(scale=12):
                 user_chat_bot_cover = gr.HTML(
@@ -105,7 +109,7 @@ with demo:
                     examples=suggests,
                     inputs=[preview_chat_input])
             with gr.Column(scale=1):
-                uuid_str2 = gr.Textbox(label='modelscope_uuid', visible=False)
+                uuid_str2 = gr.Textbox(label='session_uuid', visible=True)
 
     # def upload_file(chatbot, upload_button, _state):
     #     _uuid_str = check_uuid(uuid_str)
@@ -189,9 +193,15 @@ with demo:
         _uuid_str = check_uuid(_uuid_str)
         # builder_cfg, model_cfg, tool_cfg, available_tool_list, _, _ = parse_configuration(
         #     _uuid_str)
+        yield {
+            uuid_str2: _uuid_str
+        }
         [_uuid_str, _state] = init_user(_uuid_str, _state)
-        print("call finish")
-        return [_uuid_str, _state]
+        print("call finish, uuid str=", _uuid_str)
+        # return [_uuid_str, _state]
+        yield {
+            state: _state
+        }
 
     # demo.load(init_user, inputs=[state], outputs=[state])
     demo.load(init_all, inputs=[uuid_str2, state], outputs=[uuid_str2, state])
