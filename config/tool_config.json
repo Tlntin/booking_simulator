@@ -61,5 +61,10 @@
     "name": "退票",
     "is_active": true,
     "use": true
+  },
+  "query_weather": {
+    "name": "查询天气",
+    "is_active": true,
+    "use": true
   }
 }
