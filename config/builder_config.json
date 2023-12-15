@@ -48,9 +48,9 @@
       "use": false
     },
     "refund_tickets": {
-    "name": "退票",
-    "is_active": true,
-    "use": true
+      "name": "退票",
+      "is_active": true,
+      "use": true
     }
   },
   "model": "qwen-max"
