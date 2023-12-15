@@ -22,7 +22,7 @@ from .order_trips import OrderTrips
 from .add_passengers import AddPassengers
 from .query_orders import QueryOrders
 from .show_passengers import ShowPassengers
-
+from .refund_tickets import RefundTickets
 
 TOOL_INFO_LIST = {
     'modelscope_text-translation-zh2en': 'TranslationZh2EnTool',
@@ -44,4 +44,5 @@ TOOL_INFO_LIST = {
     "add_passengers": "AddPassengers",
     "query_orders": "QueryOrders",
     "show_passengers": "ShowPassengers",
+    "refund_tickets": "RefundTickets"
 }

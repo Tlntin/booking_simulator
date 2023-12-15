@@ -47,6 +47,11 @@
       "name": "展示乘客信息",
       "is_active": true,
       "use": true
+    },
+    "refund_tickets": {
+    "name": "退票",
+    "is_active": true,
+    "use": true
     }
   },
   "model": "qwen-plus"
