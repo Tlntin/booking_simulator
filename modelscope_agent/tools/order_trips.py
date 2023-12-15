@@ -12,7 +12,13 @@ class OrderTrips(Tool):
     description += "当用户提供完所有订票相关信息后，请立即调用该工具。"
     description += "需要先完成车票查询任务，才能订购车票。"
     description += "如果用户直接订购车票，先帮他查一下车票"
-    description += "每个人只能订一张车票，不要多问。"
+    description += """
+    补充信息：
+    座位类型：对于高铁，可选二等座/一等座/商务座；对于普通火车，可选无座/硬座/硬卧/软卧。
+    座位位置：有5个位置，分别为左侧的`A`/`B`/`C`位, 以及右侧的`E`/`F`位; 其中`A`和`F`为靠窗座位，`C`和`E`为靠过道座位。当你询问用户做哪个位置的时候，记得告诉用户这些位置的特点。
+    """
+    description += "请你耐心检查用户输入，对于用户未输入的信息，请用对老年人的尊敬的语气询问用户其缺失的信息。"
+    description += "注意：当用户信息未提供完整时，等待用户输入完成后，再调用该工具。"
     description += "订票成功后，请告诉用户订票人，车次，出发站，到达站，开车时间，到达时间，座位类型，车厢号，座位号。"
     description += """
     下面是一个简单的对话场景：
@@ -38,17 +44,17 @@ class OrderTrips(Tool):
         },
         {
             "name": "seat_type",
-            "description": "座位类型：对于高铁，可选二等座/一等座/商务座；对于普通火车，可选无座/硬座/硬卧/软卧",
-            "required": True,
-        },
-        {
-            "name": "seat_position",
-            "description": "座位位置：有5个位置，分别为左侧的`A`/`B`/`C`位, 以及右侧的`E`/`F`位; 其中`A`和`F`为靠窗座位，`C`和`E`为靠过道座位。当你询问用户做哪个位置的时候，记得告诉用户这些位置的特点。",
+            "description": "座位类型",
             "required": True,
         },
         {
             "name": "passengers_name",
             "description": "乘车人姓名。",
+            "required": True,
+        },
+        {
+            "name": "seat_position",
+            "description": "座位位置。",
             "required": True,
         },
         {
@@ -129,6 +135,33 @@ class OrderTrips(Tool):
         seat_position = kwargs.get("seat_position", "")
         passengers_name = kwargs.get("passengers_name", "")
         trips_numer = kwargs.get("trips_numer", 1)
+        if passengers_name is None or passengers_name == "":
+            result = "警告：请您提供乘车人姓名。"
+            print(result)
+            return {"result": result}
+        # load passengers informations
+        print("get passengers infomation")
+        passengers_path = os.path.join(uuid_dir, "passengers.json")
+        if os.path.exists(passengers_path):
+            with open(passengers_path, "rt", encoding="utf-8") as f:
+                passengers_list = json.load(f)
+                print("passengers_list", passengers_list)
+                passengers_list = [
+                    temp for temp in passengers_list
+                    if temp["name"] == passengers_name
+                ]
+                print("passengers_list", passengers_list)
+                if len(passengers_list) == 0:
+                    result = f"警告：您还没有录入过乘客{passengers_name}的信息，需要先添加乘客，才能继续购票。"
+                    print(result)
+                    return {"result": result}
+                else:
+                    passengers_dict = passengers_list[0]
+                    idcard = passengers_dict["idcard"]
+        else:
+            result = "警告：您还没有录入过任何乘客信息，需要先添加乘客，才能继续购票。"
+            print(result)
+            return {"result": result}
         if trips_numer != 1:
             result = "当前每次仅支持订一张票"
             print(result)
@@ -148,10 +181,8 @@ class OrderTrips(Tool):
             result = "请您选择合适的座位：有5个位置，分别为左侧的`A`/`B`/`C`位, 以及右侧的`E`/`F`位; 其中`A`和`F`为靠窗座位，`C`和`E`为靠过道座位。"
             print(result)
             return {"result": result}
-        if passengers_name is None or passengers_name == "":
-            result = "请您提供乘车人姓名。"
-            print(result)
-            return {"result": result}
+        
+        print("get passengers infomation ok!")
         print("db_path", self.db_path)
         db = sqlite3.connect(self.db_path)
         cursor = db.cursor()
@@ -279,7 +310,7 @@ class OrderTrips(Tool):
             "carriage_number": random.randint(1, 18),
             "seat_number": str(random.randint(1, 24)) + seat_position,
             "passengers_name": passengers_name,
-            # "passengers_idcard": passengers_idcard[:6] + "*" * 6 + passengers_idcard[-4: ]
+            "passengers_idcard": idcard,
         }
         # -- save order -- #
         order_list.append(result_dict)

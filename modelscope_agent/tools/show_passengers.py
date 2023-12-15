@@ -37,7 +37,7 @@ class ShowPassengers(Tool):
                 passengers_list = json.load(f)
             new_data_list = []
             for data in passengers_list:
-                data["idcard"] = data["idcard"][-12:] + "*" * 12
+                data["idcard"] = data["idcard"][:-12] + "." * 8 + data["idcard"][-4:]
                 new_data_list.append(data)
             return {"result": new_data_list}
         else:
