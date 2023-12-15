@@ -80,13 +80,18 @@ class QueryTrips(Tool):
         print("uuid str", uuid_str)
         date = kwargs['date']
         now_date = datetime.datetime.now().strftime("%Y-%m-%d")
+        # add 30 minutes
+        now_time = (
+                datetime.datetime.now()+datetime.timedelta(minutes=30)
+        ).strftime("%Y-%m-%d %H:%M:%S")
+        print("now time", now_time)
         station_from = kwargs["station_from"].rstrip("站")
         station_to = kwargs["station_to"].rstrip("站")
         tripe_type = kwargs.get("trips_type", "都可以")
         print("db_path", self.db_path)
         db = sqlite3.connect(self.db_path)
         cursor = db.cursor()
-        if date <= now_date:
+        if date < now_date:
             result = f"无法订购日期为{date}的车票，时间非法"
             cursor.close()
             db.close()
@@ -174,6 +179,10 @@ class QueryTrips(Tool):
         else:
             data_list2 = []
             for data in data_list:
+                temp_time = date + " " + data[3] + ":00"
+                print("temp_time", temp_time)
+                if temp_time <= now_time:
+                    continue
                 tripe_dict = {
                     "code": data[0],
                     "station_from": data[1],
