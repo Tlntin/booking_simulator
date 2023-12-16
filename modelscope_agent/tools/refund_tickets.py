@@ -124,7 +124,7 @@ class RefundTickets(Tool):
         if code and not date:
             if code in order_code:
                 order_info = {}
-                for info in order_list:
+                for index, info in enumerate(order_list):
                     if info['code'] == code:
                         order_info['code'] = code
                         order_info['date'] = info['date']
@@ -134,6 +134,9 @@ class RefundTickets(Tool):
                         service_charge, refund = self.refund_rule(order_time, info['price'])
                         order_info['service_charge'] = service_charge
                         order_info['refund'] = refund
+                        del order_list[index]
+                        with open(order_path, "wt", encoding="utf-8") as f:
+                            json.dump(order_list, f, indent=4, ensure_ascii=False)
                         break
                 return {"result": order_info}
 
@@ -145,7 +148,7 @@ class RefundTickets(Tool):
         elif code and date:
             if date in order_date:
                 order_info = {}
-                for info in order_list:
+                for index, info in enumerate(order_list):
                     if info['code'] == code and info['date'] == date:
                         order_info['code'] = code
                         order_info['date'] = info['date']
@@ -155,6 +158,9 @@ class RefundTickets(Tool):
                         service_charge, refund = self.refund_rule(order_time, info['price'])
                         order_info['service_charge'] = service_charge
                         order_info['refund'] = refund
+                        del order_list[index]
+                        with open(order_path, "wt", encoding="utf-8") as f:
+                            json.dump(order_list, f, indent=4, ensure_ascii=False)
                         break
                 if order_info:
                     return {"result": order_info}
@@ -167,5 +173,8 @@ class RefundTickets(Tool):
             result = "当前无退票列车车次，请输入退票的列车车次。"
             print(result)
             return {"result": result}
+
+
+
 
 

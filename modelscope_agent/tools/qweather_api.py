@@ -73,7 +73,17 @@ class Weather:
             if res1.status_code == 200:
                 data = res1.json()
                 if data.get("code", "") == "200":
-                    return data.get("daily", [])
+                    raw_data = data.get("daily", [])
+                    result_data = []
+                    for daily_data in raw_data:
+                        result_data.append({
+                            "fxDate": daily_data["fxDate"],
+                            "tempMin": daily_data["tempMin"],
+                            "tempMax": daily_data["tempMax"],
+                            "textDay": daily_data["textDay"],
+                            "textNight": daily_data["textNight"]
+                        })
+                    return result_data
                 else:
                     print(data)
             else:

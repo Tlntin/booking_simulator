@@ -6,8 +6,8 @@ from .qweather_api import get_current_weather
 
 
 class QueryWeather(Tool):
-    description = "划重点：该工具用于查询地方天气。"
-
+    description = "划重点：该工具用于查询地方天气，并根据天气情况返回出行建议"
+    description += "查询完成后，请向用户说明出行建议"
     name = "query_weather"
     # 需要的参数
     parameters: list = [
@@ -47,15 +47,13 @@ class QueryWeather(Tool):
         diff_days = (query_date.date() - now_date.date()).days
         
         if diff_days < 0:
-            raise ValueError("Can't predict weather of passed dates.")
+            return {"result": "不能查询过去日期的天气"}
         
         if diff_days >= 3:
-            return {"result": "不能预测多于2天的天气"}
+            return {"result": "不能查询多于2天后的天气"}
         
         else:
             resp = get_current_weather(location=location)
-            
-            print(resp)
             for item in resp:
                 if item["fxDate"] == query_date.strftime('%Y-%m-%d'):
                     return {"result": item}
