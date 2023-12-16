@@ -16,12 +16,15 @@ class OrderTrips(Tool):
     description += """
     补充信息：
     座位类型：对于高铁，可选二等座/一等座/商务座；对于普通火车，可选无座/硬座/硬卧/软卧。
-    座位位置：有5个位置，分别为左侧的`A`/`B`/`C`位, 以及右侧的`E`/`F`位; 其中`A`和`F`为靠窗座位，`C`和`E`为靠过道座位。
     """
+    # 对于普通火车硬座或者高铁二等座：座位位置：有5个位置，分别为左侧的`A`/`B`/`C`位, 以及右侧的`D`/`F`位; 其中`A`和`F`为靠窗座位，`D`和`E`为靠过道座位。
+    # 其他情况，例如无座，硬卧，软卧，普通火车不能选座位。
+    # 对于高铁一等座：座位位置：有4个位置，分别为左侧的`A`/`C`位, 以及右侧的`D`/`F`位; 其中`A`和`F`为靠窗座位，`C`和`D`为靠过道座位。
+    # 对于高铁商务座：座位位置：有3个位置，分别为左侧的`A`/`C`位, 以及右侧的`F`位; 其中`A`和`F`为靠窗座位。
     # description += "请你耐心检查用户输入，对于用户未输入的信息，请用对老年人的尊敬的语气询问用户其缺失的信息。"
     # description += "注意：当用户信息未提供完整时，等待用户输入完成后，再调用该工具。"
     description += "订票成功后，请告诉用户车次，出发站，到达站，开车时间，到达时间，座位类型，车厢号，座位号。"
-    description += "订票成功后，用query_weather工具查询并告诉用户当天始发站和终到站的天气情况。"
+    description += "订票成功后，用天气查询<query_weather>工具分别查询当天`出发站`以及`到达站`的天气情况，并给出穿衣建议。"
     # description += """
     # 下面是一个简单的对话场景：
     # <用户>: 帮我订购明天的，G32车次的，二等座
@@ -47,7 +50,7 @@ class OrderTrips(Tool):
         {
             "name": "seat_type",
             "description": "座位类型",
-            "required": True,
+            "required": False,
         },
         # {
         #     "name": "passengers_name",
@@ -137,9 +140,91 @@ class OrderTrips(Tool):
             order_list = []
         date = kwargs['date']
         now_date = datetime.datetime.now().strftime("%Y-%m-%d")
+        # add 30 minutes
         train_code = kwargs["train_code"]
-        seat_type = kwargs["seat_type"]
+        raw_seat_type = kwargs["seat_type"]
         seat_position = kwargs.get("seat_position", "")
+        db = sqlite3.connect(self.db_path)
+        cursor = db.cursor()
+        # --- find trips -- #
+        print("call find trips")
+        trips_data = self.find_trips(cursor, train_code)
+        print("call find trips OK")
+        if trips_data["type"] == 1:
+            suggestion_seat = "二等座/一等座/商务座"
+        else:
+            suggestion_seat = "无座/硬座/硬卧/软卧"
+
+        result = "您输入的车次{}没有{}，我们仅提供{}, 请检查后重新输入。"
+        if len(trips_data) == 0:
+            result = f"您输入的车次{train_code}没有找到, 请检查后重新输入。"
+            print(result)
+            cursor.close()
+            db.close()
+            return {"result": result}
+        # get price, seat_type
+        price_dict = trips_data["price_data"]
+        if "二等" in raw_seat_type:
+            price = price_dict.get("second_class")
+            seat_type = "二等座"
+            if price is None:
+                result = result.format(train_code, seat_type, suggestion_seat)
+                cursor.close()
+                db.close()
+                return {"result": result}
+        elif "一等" in raw_seat_type:
+            price = price_dict.get("first_class")
+            seat_type = "一等座"
+            if price is None:
+                result = result.format(train_code, seat_type, suggestion_seat)
+                cursor.close()
+                db.close()
+                return {"result": result}
+        elif "商务" in raw_seat_type:
+            price = price_dict.get("business_class")
+            seat_type = "商务座"
+            if price is None:
+                result = result.format(train_code, seat_type, suggestion_seat)
+                cursor.close()
+                db.close()
+                return {"result": result}
+        elif "无座" in raw_seat_type:
+            price = price_dict.get("no_seat")
+            seat_type = "无座"
+            if price is None:
+                cursor.close()
+                db.close()
+                result = result.format(train_code, seat_type, suggestion_seat)
+                return {"result": result}
+        elif "硬座" in raw_seat_type:
+            price = price_dict.get("hard_seat")
+            seat_type = "硬座"
+            if price is None:
+                result = result.format(train_code, seat_type, suggestion_seat)
+                cursor.close()
+                db.close()
+                return {"result": result}
+        elif "硬卧" in raw_seat_type:
+            price = price_dict.get("hard_sleeper")
+            seat_type = "硬卧"
+            if price is None:
+                result = result.format(train_code, seat_type, suggestion_seat)
+                cursor.close()
+                db.close()
+                return {"result": result}
+        elif "软卧" in raw_seat_type:
+            price = price_dict.get("soft_sleeper")
+            seat_type = "软卧"
+            if price is None:
+                result = result.format(train_code, seat_type, suggestion_seat)
+                cursor.close()
+                db.close()
+                return {"result": result}
+        else:
+            result = result.format(train_code, raw_seat_type, suggestion_seat)
+            cursor.close()
+            db.close()
+            return {"result": result}
         # passengers_name = kwargs.get("passengers_name", "")
         # passengers_idcard = kwargs.get("passengers_idcard", "")
         # trips_numer = kwargs.get("trips_numer", 1)
@@ -190,27 +275,38 @@ class OrderTrips(Tool):
         #     result = "当前每次仅支持订一张票"
         #     print(result)
         #     return {"result": result}
-        if "A" in seat_position:
-            seat_position = "A"
-        elif "B" in seat_position:
-            seat_position = "B"
-        elif "C" in seat_position:
-            seat_position = "C"
-        elif "E" in seat_position:
-            seat_position = "E"
-        elif "F" in seat_position:
-            seat_position = "F"
+        if trips_data["type"] == 1 or (trips_data["type"] == 0 and seat_type == "硬座"):
+            if "A" in seat_position or "A" in raw_seat_type:
+                seat_position = "A"
+            elif "B" in seat_position or "B" in raw_seat_type:
+                seat_position = "B"
+            elif "C" in seat_position or "C" in raw_seat_type:
+                seat_position = "C"
+            elif "D" in seat_position or "D" in raw_seat_type:
+                seat_position = "E"
+            elif "F" in seat_position or "F" in raw_seat_type:
+                seat_position = "F"
+            else:
+                print(seat_position)
+                if (trips_data["type"] == 1 and seat_type == "二等座") or\
+                        (trips_data["type"] == 0 and seat_type == "硬座"):
+                    result = "温馨提示：请您选择合适的位置。一共有5个位置，分别为左侧的`A`/`B`/`C`位, 以及右侧的`D`/`F`位; 其中`A`和`F`为靠窗座位，`D`和`E`为靠过道座位。"
+                elif seat_type == "一等座":
+                    result = "温馨提示：请您选择合适的座位。一共有4个位置，分别为左侧的`A`/`C`位, 以及右侧的`D`/`F`位; 其中`A`和`F`为靠窗座位，`C`和`D`为靠过道座位。"
+                else:
+                    result = "温馨提示：请您选择合适的座位。一共有3个位置，分别为左侧的`A`/`C`位, 以及右侧的`F`位; 其中`A`和`F`为靠窗座位。"
+                print(result)
+                cursor.close()
+                db.close()
+                return {"result": result}
+        elif seat_type == "硬卧" or seat_type == "软卧":
+            seat_position = random.choice(["上铺", "中铺", "下铺"])
         else:
-            print(seat_position)
-            result = "请您选择合适的座位：有5个位置，分别为左侧的`A`/`B`/`C`位, 以及右侧的`E`/`F`位; 其中`A`和`F`为靠窗座位，`C`和`E`为靠过道座位。"
-            print(result)
-            return {"result": result}
-        
+            seat_position = ""
         print("get passengers infomation ok!")
         print("db_path", self.db_path)
-        db = sqlite3.connect(self.db_path)
-        cursor = db.cursor()
-        if date <= now_date:
+
+        if date < now_date:
             result = f"无法订购日期为{date}的车票，时间非法"
             cursor.close()
             db.close()
@@ -230,22 +326,7 @@ class OrderTrips(Tool):
             cursor.close()
             db.close()
             return {"result": result}
-        # --- find trips -- #
-        print("call find trips")
-        trips_data = self.find_trips(cursor, train_code)
-        print("call find trips OK")
-        if trips_data["type"] == 1:
-            suggestion_seat = "二等座/一等座/商务座"
-        else:
-            suggestion_seat = "无座/硬座/硬卧/软卧"
 
-        result = "您输入的车次{}没有{}，我们仅提供{}, 请检查后重新输入。"
-        if len(trips_data) == 0:
-            result = f"您输入的车次{train_code}没有找到, 请检查后重新输入。"
-            print(result)
-            cursor.close()
-            db.close()
-            return {"result": result}
         # validate order has conflict
         for temp in order_list:
             if temp["date"] == date:
@@ -255,71 +336,6 @@ class OrderTrips(Tool):
                     cursor.close()
                     db.close()
                     return result
-        price_dict = trips_data["price_data"]
-        if "二等" in seat_type:
-            price = price_dict.get("second_class")
-            seat_type = "二等座"
-            if price is None:
-                result = result.format(train_code, seat_type, suggestion_seat)
-                cursor.close()
-                db.close()
-                return {"result": result}
-        elif "一等" in seat_type:
-            price = price_dict.get("first_class")
-            seat_type = "一等座"
-            if price is None:
-                result = result.format(train_code, seat_type, suggestion_seat)
-                cursor.close()
-                db.close()
-                return {"result": result}
-        elif "商务" in seat_type:
-            price = price_dict.get("business_class")
-            seat_type = "商务座"
-            if price is None:
-                result = result.format(train_code, seat_type, suggestion_seat)
-                cursor.close()
-                db.close()
-                return {"result": result}
-        elif "无座" in seat_type:
-            price = price_dict.get("no_seat")
-            seat_type = "无座"
-            if price is None:
-                cursor.close()
-                db.close()
-                result = result.format(train_code, seat_type, suggestion_seat)
-                return {"result": result}
-        elif "硬座" in seat_type:
-            price = price_dict.get("hard_seat")
-            seat_type = "硬座"
-            if price is None:
-                result = result.format(train_code, seat_type, suggestion_seat)
-                cursor.close()
-                db.close()
-                return {"result": result}
-        elif "硬卧" in seat_type:
-            price = price_dict.get("hard_sleeper")
-            seat_type = "硬卧"
-            if price is None:
-                result = result.format(train_code, seat_type, suggestion_seat)
-                cursor.close()
-                db.close()
-                return {"result": result}
-        elif "软卧" in seat_type:
-            price = price_dict.get("soft_sleeper")
-            seat_type = "软卧"
-            if price is None:
-                result = result.format(train_code, seat_type, suggestion_seat)
-                cursor.close()
-                db.close()
-                return {"result": result}
-        else:
-            result = result.format(train_code, seat_type, suggestion_seat)
-            cursor.close()
-            db.close()
-            return {"result": result}
-        # find passengers #
-        # todo
-        # valid id card
 
         result_dict = {
             "code": trips_data["code"],
@@ -331,16 +347,23 @@ class OrderTrips(Tool):
             "type": "高铁" if trips_data["type"] else "普通火车",
             "trips_type": seat_type,
             "price": price,
-            "carriage_number": random.randint(1, 18),
-            "seat_number": str(random.randint(1, 24)) + seat_position,
+            "carriage_number": random.randint(1, 16),
+            "seat_number": str(random.randint(1, 16)) + seat_position,
             # "passengers_name": passengers_name,
             # "passengers_idcard": idcard,
         }
+        if seat_type == "无座":
+            result_dict["seat_number"] = ""
         # -- save order -- #
         order_list.append(result_dict)
         with open(order_path, "wt") as f:
             json.dump(order_list, f, ensure_ascii=False, indent=4)
-        return {"result": result_dict}
+        return {
+            "result": {
+                "date": result_dict,
+                "message": "<指令>：请用天气查询<query_weather>工具分别查询当天`出发站`以及`到达站`的天气情况，并给出穿衣建议。"
+            }
+        }
 
 
 

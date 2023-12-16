@@ -5,13 +5,12 @@ import time
 import random
 import json
 
-
 urllib3.disable_warnings()
 
 
 # get api from here https://dev.qweather.com/
-weather_key = "119e208c7a5f4a60a9a1cd59728a5450"
-assert len(weather_key) > 0, print("please get weather query api in https://dev.qweather.com/")
+# weather_key = ""
+# assert len(weather_key) > 0, print("please get weather query api in https://dev.qweather.com/")
 
 
 class Weather:
@@ -59,10 +58,13 @@ class Weather:
 
     def get_weather_from_api(self, location: str):
         """
-        Get weather information from Zefeng weather api
+        Get weather information from HeFeng weather api
         :param location: location information, which can be location_id or a latitude and longitude (format: "longitude, latitude")
         """
-        url = "https://devapi.qweather.com/v7/weather/3d?"
+        # for free api
+        # url = "https://devapi.qweather.com/v7/weather/7d?"
+        # for standard api
+        url = "https://api.qweather.com/v7/weather/15d?"
         params = {
             "location": location,
             "key": self.api_key
@@ -76,12 +78,16 @@ class Weather:
                     raw_data = data.get("daily", [])
                     result_data = []
                     for daily_data in raw_data:
+                        if daily_data["textDay"] == daily_data["textNight"]:
+                            weather_description = daily_data["textDay"]
+                        else:
+                            weather_description = daily_data["textDay"] + "转" \
+                                                  + daily_data["textNight"]
                         result_data.append({
-                            "fxDate": daily_data["fxDate"],
-                            "tempMin": daily_data["tempMin"],
-                            "tempMax": daily_data["tempMax"],
-                            "textDay": daily_data["textDay"],
-                            "textNight": daily_data["textNight"]
+                            "date": daily_data["fxDate"],
+                            "temperature_min": daily_data["tempMin"],
+                            "temperature_max": daily_data["tempMax"],
+                            "weather_description": weather_description
                         })
                     return result_data
                 else:
@@ -95,20 +101,23 @@ class Weather:
             time.sleep(3 + random.random())
             session.close()
         return []
-    
-def get_current_weather(location: str):
-    weather = Weather(weather_key)
-    location_data = weather.get_location_from_api(location)
-    if len(location_data) > 0:
-        location_dict = location_data[0]
-        city_id = location_dict["id"]
-        weather_res = weather.get_weather_from_api(city_id)
-        return weather_res
-    else:
-        return []
-    
-    
 
-if __name__ =="__main__":
+
+if __name__ == "__main__":
+    weather_key = ""
+
+
+    def get_current_weather(location: str):
+        weather = Weather(weather_key)
+        location_data = weather.get_location_from_api(location)
+        if len(location_data) > 0:
+            location_dict = location_data[0]
+            city_id = location_dict["id"]
+            weather_res = weather.get_weather_from_api(city_id)
+            return weather_res
+        else:
+            return []
+
+
     resp = get_current_weather("广州")
     print(resp)

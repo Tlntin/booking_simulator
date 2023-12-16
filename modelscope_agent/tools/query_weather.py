@@ -2,12 +2,14 @@ import os
 import json
 import datetime
 from .tool import Tool
-from .qweather_api import get_current_weather
+from .qweather_api import Weather
+from modelscope_agent.tools.tool import Tool, ToolSchema
+from pydantic import ValidationError
 
 
 class QueryWeather(Tool):
-    description = "划重点：该工具用于查询地方天气，并根据天气情况返回出行建议"
-    description += "查询完成后，请向用户说明出行建议"
+    description = "划重点：该工具用于查询地方天气。"
+    description += "天气查询完成后，请向用户说明出行建议与穿衣指南。"
     name = "query_weather"
     # 需要的参数
     parameters: list = [
@@ -17,11 +19,48 @@ class QueryWeather(Tool):
             "required": True,
         },
         {
-            "name": "query_date",
-            "description": "日期",
+            "name": "start_date",
+            "description": "开始日期",
+            "required": True,
+        },
+        {
+            "name": "end_date",
+            "description": "结束日期",
             "required": True,
         },
     ]
+
+    def __init__(self, cfg = {}):
+        self.cfg = cfg.get(self.name, {})
+        self.token = self.cfg.get('token', os.environ.get('QWEATHER_TOKEN', ''))
+        assert self.token != '', 'weather api token must be acquired through ' \
+            '"please get weather query api in https://dev.qweather.com/") \
+            and set by QWEATHER_TOKEN'
+        self.weather = Weather(self.token)
+        self.is_remote_tool = True
+        try:
+            all_param = {
+                'name': self.name,
+                'description': self.description,
+                'parameters': self.parameters
+            }
+            self.tool_schema = ToolSchema(**all_param)
+        except ValidationError:
+            raise ValueError(f'Error when parsing parameters of {self.name}')
+
+        self._str = self.tool_schema.model_dump_json()
+        self._function = self.parse_pydantic_model_to_openai_function(
+            all_param)
+
+    def get_current_weather(self, location: str):
+        location_data = self.weather.get_location_from_api(location)
+        if len(location_data) > 0:
+            location_dict = location_data[0]
+            city_id = location_dict["id"]
+            weather_res = self.weather.get_weather_from_api(city_id)
+            return weather_res
+        else:
+            return []
 
     def __call__(self, remote=False, *args, **kwargs):
         if self.is_remote_tool or remote:
@@ -29,32 +68,47 @@ class QueryWeather(Tool):
         else:
             return self._local_call(*args, **kwargs)
 
-    def _remote_call(self, *args, **kwargs):
+    def _local_call(self, *args, **kwargs):
         pass
 
-    def _local_call(self, *args, **kwargs):
+    def _remote_call(self, *args, **kwargs):
         # uuid_str = kwargs["uuid_str"]
         # print("uuid str", uuid_str)
         
         location = kwargs.get("location", "")
-        query_date = kwargs.get("query_date", "")
-        
-        if location is None or query_date is None:
-            raise ValueError("location: {}, query_date{}, ValueRrror".format(location, query_date))
-        
-        query_date = datetime.datetime.strptime(query_date, "%Y-%m-%d")
+        start_date = kwargs.get("start_date", "")
+        end_date = kwargs.get("end_date", "")
+
+        if len(location) == 0 or len(start_date + end_date) == 0:
+            raise ValueError("location: {}, start_date{}, end_date{} ValueRrror".format(
+                location, start_date, end_date
+            ))
+        elif len(start_date) > 0 and len(end_date) == 0:
+            end_date = start_date
+        elif len(start_date) == 0 and len(end_date) > 0:
+            start_date = end_date
+        start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+        end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+        if start_date > end_date:
+            start_date, end_date = end_date, start_date
         now_date = datetime.datetime.today()
-        diff_days = (query_date.date() - now_date.date()).days
-        
-        if diff_days < 0:
+        diff_day1 = (start_date.date() - now_date.date()).days
+        diff_day2 = (end_date.date() - now_date.date()).days
+
+        if diff_day1 < 0:
             return {"result": "不能查询过去日期的天气"}
         
-        if diff_days >= 3:
-            return {"result": "不能查询多于2天后的天气"}
-        
+        if diff_day2 >= 15:
+            return {"result": "只支持查询14天内的天气"}
+        resp = self.get_current_weather(location=location)
+        print("result", resp)
+        start_date = start_date.strftime('%Y-%m-%d')
+        end_date = end_date.strftime('%Y-%m-%d')
+        resp = [
+            item for item in resp
+            if start_date <= item["date"] <= end_date
+        ]
+        if len(resp) > 0:
+            return {"result": resp}
         else:
-            resp = get_current_weather(location=location)
-            for item in resp:
-                if item["fxDate"] == query_date.strftime('%Y-%m-%d'):
-                    return {"result": item}
-        return {"result": "查不到当天的天气"} 
+            return {"result": "查不到当天的天气"}
