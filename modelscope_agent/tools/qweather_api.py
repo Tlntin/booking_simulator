@@ -1,9 +1,8 @@
-from openai import OpenAI
 import requests
 import urllib3
 import time
 import random
-import json
+
 
 urllib3.disable_warnings()
 
