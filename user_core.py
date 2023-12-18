@@ -23,7 +23,7 @@ def init_user_chatbot_agent(uuid_str=''):
     model_cfg[builder_cfg.model]['generate_cfg']['top_p'] = 0.3
     # model_cfg[builder_cfg.model]['generate_cfg']['top_k'] = 2
     model_cfg[builder_cfg.model]['generate_cfg']['temperature'] = 0.3
-    model_cfg[builder_cfg.model]['generate_cfg']['seed'] = 2024
+    model_cfg[builder_cfg.model]['generate_cfg']['seed'] = 2222
     model_cfg[builder_cfg.model]['generate_cfg']['stop'] = 'Observation'
 
     # build model
