@@ -115,7 +115,17 @@ class QueryWeather(Tool):
         else:
             duration = "7d"
         print("location: ", location)
-        resp = self.get_current_weather(location=location, duration=duration)
+        if isinstance(location, str):
+            resp = self.get_current_weather(location=location, duration=duration)
+        elif isinstance(location, list):
+            resp = []
+            for loc in location:
+                temp_res = self.get_current_weather(location=loc, duration=duration)
+                for temp in temp_res:
+                    temp["location"] = loc 
+                    resp.append(temp)
+        else:
+            resp = []
         print("result", resp)
         start_date = start_date.strftime('%Y-%m-%d')
         end_date = end_date.strftime('%Y-%m-%d')
