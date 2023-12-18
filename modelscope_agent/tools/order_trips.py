@@ -24,7 +24,6 @@ class OrderTrips(Tool):
     # description += "请你耐心检查用户输入，对于用户未输入的信息，请用对老年人的尊敬的语气询问用户其缺失的信息。"
     # description += "注意：当用户信息未提供完整时，等待用户输入完成后，再调用该工具。"
     description += "订票成功后，请告诉用户车次，出发站，到达站，开车时间，到达时间，座位类型，车厢号，座位号。"
-    description += "订票成功后，用天气查询<query_weather>工具分别查询当天`出发站`以及`到达站`的天气情况，并给出穿衣建议。"
     # description += """
     # 下面是一个简单的对话场景：
     # <用户>: 帮我订购明天的，G32车次的，二等座
@@ -142,7 +141,7 @@ class OrderTrips(Tool):
         now_date = datetime.datetime.now().strftime("%Y-%m-%d")
         # add 30 minutes
         train_code = kwargs["train_code"]
-        raw_seat_type = kwargs["seat_type"]
+        raw_seat_type = kwargs.get("seat_type", "")
         seat_position = kwargs.get("seat_position", "")
         db = sqlite3.connect(self.db_path)
         cursor = db.cursor()
@@ -161,7 +160,7 @@ class OrderTrips(Tool):
             print(result)
             cursor.close()
             db.close()
-            return {"result": result}
+            return {"result": {"status": "failed", "description": result}}
         # get price, seat_type
         price_dict = trips_data["price_data"]
         if "二等" in raw_seat_type:
@@ -171,7 +170,7 @@ class OrderTrips(Tool):
                 result = result.format(train_code, seat_type, suggestion_seat)
                 cursor.close()
                 db.close()
-                return {"result": result}
+                return {"result": {"status": "failed", "description": result}}
         elif "一等" in raw_seat_type:
             price = price_dict.get("first_class")
             seat_type = "一等座"
@@ -179,7 +178,7 @@ class OrderTrips(Tool):
                 result = result.format(train_code, seat_type, suggestion_seat)
                 cursor.close()
                 db.close()
-                return {"result": result}
+                return {"result": {"status": "failed", "description": result}}
         elif "商务" in raw_seat_type:
             price = price_dict.get("business_class")
             seat_type = "商务座"
@@ -187,7 +186,7 @@ class OrderTrips(Tool):
                 result = result.format(train_code, seat_type, suggestion_seat)
                 cursor.close()
                 db.close()
-                return {"result": result}
+                return {"result": {"status": "failed", "description": result}}
         elif "无座" in raw_seat_type:
             price = price_dict.get("no_seat")
             seat_type = "无座"
@@ -195,7 +194,7 @@ class OrderTrips(Tool):
                 cursor.close()
                 db.close()
                 result = result.format(train_code, seat_type, suggestion_seat)
-                return {"result": result}
+                return {"result": {"status": "failed", "description": result}}
         elif "硬座" in raw_seat_type:
             price = price_dict.get("hard_seat")
             seat_type = "硬座"
@@ -203,7 +202,7 @@ class OrderTrips(Tool):
                 result = result.format(train_code, seat_type, suggestion_seat)
                 cursor.close()
                 db.close()
-                return {"result": result}
+                return {"result": {"status": "failed", "description": result}}
         elif "硬卧" in raw_seat_type:
             price = price_dict.get("hard_sleeper")
             seat_type = "硬卧"
@@ -211,7 +210,7 @@ class OrderTrips(Tool):
                 result = result.format(train_code, seat_type, suggestion_seat)
                 cursor.close()
                 db.close()
-                return {"result": result}
+                return {"result": {"status": "failed", "description": result}}
         elif "软卧" in raw_seat_type:
             price = price_dict.get("soft_sleeper")
             seat_type = "软卧"
@@ -219,12 +218,12 @@ class OrderTrips(Tool):
                 result = result.format(train_code, seat_type, suggestion_seat)
                 cursor.close()
                 db.close()
-                return {"result": result}
+                return {"result": {"status": "failed", "description": result}}
         else:
             result = result.format(train_code, raw_seat_type, suggestion_seat)
             cursor.close()
             db.close()
-            return {"result": result}
+            return {"result": {"status": "failed", "description": result}}
         # passengers_name = kwargs.get("passengers_name", "")
         # passengers_idcard = kwargs.get("passengers_idcard", "")
         # trips_numer = kwargs.get("trips_numer", 1)
@@ -290,15 +289,15 @@ class OrderTrips(Tool):
                 print(seat_position)
                 if (trips_data["type"] == 1 and seat_type == "二等座") or\
                         (trips_data["type"] == 0 and seat_type == "硬座"):
-                    result = "温馨提示：请您选择合适的位置。一共有5个位置，分别为左侧的`A`/`B`/`C`位, 以及右侧的`D`/`F`位; 其中`A`和`F`为靠窗座位，`D`和`E`为靠过道座位。"
+                    result = "温馨提示：您需要选择一个座位。一共有5个位置，分别为左侧的`A`/`B`/`C`位, 以及右侧的`D`/`F`位; 其中`A`和`F`为靠窗座位，`D`和`E`为靠过道座位。"
                 elif seat_type == "一等座":
-                    result = "温馨提示：请您选择合适的座位。一共有4个位置，分别为左侧的`A`/`C`位, 以及右侧的`D`/`F`位; 其中`A`和`F`为靠窗座位，`C`和`D`为靠过道座位。"
+                    result = "温馨提示：您需要选择一个座位。一共有4个位置，分别为左侧的`A`/`C`位, 以及右侧的`D`/`F`位; 其中`A`和`F`为靠窗座位，`C`和`D`为靠过道座位。"
                 else:
-                    result = "温馨提示：请您选择合适的座位。一共有3个位置，分别为左侧的`A`/`C`位, 以及右侧的`F`位; 其中`A`和`F`为靠窗座位。"
+                    result = "温馨提示：您需要选择一个座位。一共有3个位置，分别为左侧的`A`/`C`位, 以及右侧的`F`位; 其中`A`和`F`为靠窗座位。"
                 print(result)
                 cursor.close()
                 db.close()
-                return {"result": result}
+                return {"result": {"status": "failed", "description": result}}
         elif seat_type == "硬卧" or seat_type == "软卧":
             seat_position = random.choice(["上铺", "中铺", "下铺"])
         else:
@@ -310,7 +309,7 @@ class OrderTrips(Tool):
             result = f"无法订购日期为{date}的车票，时间非法"
             cursor.close()
             db.close()
-            return {"result": result}
+            return {"result": {"status": "failed", "description": result}}
         try:
             query_date = datetime.datetime.strptime(date, "%Y-%m-%d")
             now_date = datetime.datetime.now()
@@ -319,13 +318,13 @@ class OrderTrips(Tool):
                 print(result)
                 cursor.close()
                 db.close()
-                return {"result": result}
+                return {"result": {"status": "failed", "description": result}}
         except:
             result = f"您输入的日期格式不对，您可以输入像2023-12-03这样格式的日期哈"
             print(result)
             cursor.close()
             db.close()
-            return {"result": result}
+            return {"result": {"status": "failed", "description": result}}
 
         # validate order has conflict
         for temp in order_list:
@@ -335,7 +334,7 @@ class OrderTrips(Tool):
                     print(result)
                     cursor.close()
                     db.close()
-                    return result
+                    return {"result": {"status": "failed", "description": result}}
 
         result_dict = {
             "code": trips_data["code"],
@@ -360,8 +359,10 @@ class OrderTrips(Tool):
             json.dump(order_list, f, ensure_ascii=False, indent=4)
         return {
             "result": {
-                "date": result_dict,
-                "message": "<指令>：请用天气查询<query_weather>工具分别查询当天`出发站`以及`到达站`的天气情况，并给出穿衣建议。"
+                "status": "success",
+                "data": result_dict,
+                "description": "",
+                "prompt": f'立刻调用<query_weather> tool 查询地方天气，分别查询{trips_data["station_from"]}和{trips_data["station_to"]}在{date}的天气，并给出穿衣指南和出行指南。',
             }
         }
 

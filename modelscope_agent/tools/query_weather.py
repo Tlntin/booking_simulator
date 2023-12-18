@@ -32,11 +32,12 @@ class QueryWeather(Tool):
 
     def __init__(self, cfg = {}):
         self.cfg = cfg.get(self.name, {})
-        self.token = self.cfg.get('token', os.environ.get('QWEATHER_TOKEN', ''))
-        assert self.token != '', 'weather api token must be acquired through ' \
+        self.token_free = self.cfg.get('token', os.environ.get('QWEATHER_TOKEN_FREE', ''))
+        self.token_pro = self.cfg.get('token', os.environ.get('QWEATHER_TOKEN_PRO', ''))
+        assert self.token_free != '', 'weather api token must be acquired through ' \
             '"please get weather query api in https://dev.qweather.com/") \
             and set by QWEATHER_TOKEN'
-        self.weather = Weather(self.token)
+        self.weather = Weather(self.token_free, self.token_pro)
         self.is_remote_tool = True
         try:
             all_param = {
@@ -52,12 +53,21 @@ class QueryWeather(Tool):
         self._function = self.parse_pydantic_model_to_openai_function(
             all_param)
 
-    def get_current_weather(self, location: str):
+    def get_current_weather(self, location: str, duration: str = "7d"):
+        """_summary_
+
+        Args:
+            location (str): _description_
+            duration (str, optional): _description_. Defaults to "7d", can select "15d" and "7d"
+
+        Returns:
+            _type_: _description_
+        """
         location_data = self.weather.get_location_from_api(location)
         if len(location_data) > 0:
             location_dict = location_data[0]
             city_id = location_dict["id"]
-            weather_res = self.weather.get_weather_from_api(city_id)
+            weather_res = self.weather.get_weather_from_api(city_id, duration=duration)
             return weather_res
         else:
             return []
@@ -100,7 +110,12 @@ class QueryWeather(Tool):
         
         if diff_day2 >= 15:
             return {"result": "只支持查询14天内的天气"}
-        resp = self.get_current_weather(location=location)
+        elif diff_day2 > 7:
+            duration = "15d"
+        else:
+            duration = "7d"
+        print("location: ", location)
+        resp = self.get_current_weather(location=location, duration=duration)
         print("result", resp)
         start_date = start_date.strftime('%Y-%m-%d')
         end_date = end_date.strftime('%Y-%m-%d')

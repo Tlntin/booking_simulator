@@ -9,12 +9,15 @@ urllib3.disable_warnings()
 
 # get api from here https://dev.qweather.com/
 # weather_key = ""
-# assert len(weather_key) > 0, print("please get weather query api in https://dev.qweather.com/")
 
 
 class Weather:
-    def __init__(self, api_key):
-        self.api_key = api_key
+    def __init__(self, api_key_free: str, api_key_pro=None):
+        self.api_key_free = api_key_free
+        assert len(api_key_free) > 0, print(
+            "please get weather query api in https://dev.qweather.com/"
+        )
+        self.api_key_pro = api_key_pro
 
     def get_location_from_api(self, location, adm=None,
                               location_range="world", lang="zh"):
@@ -28,7 +31,7 @@ class Weather:
         """
         url = "https://geoapi.qweather.com/v2/city/lookup?"
         params = {
-            "key": self.api_key,
+            "key": self.api_key_free,
             "location": location,
             "range": location_range,
             "lang": lang,
@@ -55,18 +58,26 @@ class Weather:
             session.close()
         return []
 
-    def get_weather_from_api(self, location: str):
+    def get_weather_from_api(self, location: str, duration: str = "7d"):
         """
         Get weather information from HeFeng weather api
         :param location: location information, which can be location_id or a latitude and longitude (format: "longitude, latitude")
         """
+        assert duration in ["7d", "15d"]
         # for free api
-        # url = "https://devapi.qweather.com/v7/weather/7d?"
-        # for standard api
-        url = "https://api.qweather.com/v7/weather/15d?"
+        if duration == "7d":
+            url = "https://devapi.qweather.com/v7/weather/7d?"
+            api_key = self.api_key_free
+        else:
+            # for standard api
+            url = "https://api.qweather.com/v7/weather/15d?"
+            api_key = self.api_key_pro
+            assert api_key is not None, print(
+                "only pro api can support weather check in 15 day's"
+            )
         params = {
             "location": location,
-            "key": self.api_key
+            "key": api_key
         }
         session = requests.session()
         try:
@@ -103,11 +114,12 @@ class Weather:
 
 
 if __name__ == "__main__":
-    weather_key = ""
+    weather_free_key = ""
+    weather_pro_key = None
 
 
     def get_current_weather(location: str):
-        weather = Weather(weather_key)
+        weather = Weather(weather_free_key, weather_pro_key)
         location_data = weather.get_location_from_api(location)
         if len(location_data) > 0:
             location_dict = location_data[0]
