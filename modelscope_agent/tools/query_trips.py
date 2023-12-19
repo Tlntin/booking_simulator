@@ -256,4 +256,7 @@ class QueryTrips(Tool):
                 data_list2.append(tripe_dict)
             cursor.close()
             db.close()
+            if len(data_list2) > 10:
+                data_list2 = random.sample(data_list2, k=10)
+                data_list2.sort(key=lambda x: x["driving_time"])
             return {"result": data_list2}
