@@ -70,6 +70,7 @@ export QWEATHER_TOKEN_FREE=your_free_token
 ```bash
 export QWEATHER_TOKEN_PRO=your_pro_token
 ```
+
 - 正式运行
 ```bash
 python app.py
@@ -77,9 +78,7 @@ python app.py
 
 # 项目说明
 
-- 该项目参考[该教程]([modelscope Agent 新人开发教程_天池技术圈-阿里云天池 (aliyun.com)](https://tianchi.aliyun.com/forum/post/641455))创建
 - 下面是主要文件说明
-
 ```bash
 config/  # 里面有很多配置文件，默认启用的是model_config.json和tool_config.json
 modelscope_agent/tools/ # 注册工具链的位置
