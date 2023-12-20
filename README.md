@@ -90,5 +90,5 @@ excel2db.py # 将网上现有车票excel转sqlite3数据库的代码
 ```
 
 ### 项目体验
-地址：https://www.modelscope.cn/studios/Tlntin/booking_simulator/summary
-
+- 演示视频：https://www.bilibili.com/video/BV1NQ4y137GX/
+- 体验地址：https://www.modelscope.cn/studios/Tlntin/booking_simulator/summary
