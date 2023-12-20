@@ -43,6 +43,8 @@ license: Apache License 2.0
 
 - Python 3.10
 - 获取使用Qwen 2.0模型所需的API-key，可从[DashScope](https://help.aliyun.com/zh/dashscope/developer-reference/activate-dashscope-and-create-an-api-key)免费开通和获取。
+- 获取ModelScope sdk key，可以参考上面的配套开发教程获取。
+- 获取和风天气的免费api，获取网站：https://dev.qweather.com
 
 ## 安装
 
@@ -57,9 +59,16 @@ pip install -r requirements.txt
 
 ## 使用方法
 
+- 导入环境变量
 ```bash
-export PYTHONPATH=$PYTHONPATH:/path/to/your/modelscope-agent
 export DASHSCOPE_API_KEY=your_api_key
+export MODELSCOPE_API_TOKEN=your_token
+export QWEATHER_TOKEN_FREE=your_free_token
+# 可选导入，使用标准版（付费的）的和风天气api，支持14天内的天气查询。
+export QWEATHER_TOKEN_PRO=your_pro_token
+```
+- 正式运行
+```bash
 python app.py
 ```
 
