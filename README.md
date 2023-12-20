@@ -22,6 +22,12 @@ license: Apache License 2.0
     <br>
 <p>
 
+<p align="center">
+<a href="https://www.modelscope.cn/studios/Tlntin/booking_simulator/summary">Demo</a>
+<br>
+        <a href="README_EN.md">English</a>&nbsp ｜ &nbsp中文
+</p>
+
 
 ## 介绍
 
