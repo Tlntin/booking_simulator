@@ -59,12 +59,15 @@ pip install -r requirements.txt
 
 ## 使用方法
 
-- 导入环境变量
+- 环境变量导入
 ```bash
 export DASHSCOPE_API_KEY=your_api_key
 export MODELSCOPE_API_TOKEN=your_token
 export QWEATHER_TOKEN_FREE=your_free_token
-# 可选导入，使用标准版（付费的）的和风天气api，支持14天内的天气查询。
+```
+
+- （可选）环境变量导入，使用标准版（付费的）的和风天气api，支持14天内的天气查询。
+```bash
 export QWEATHER_TOKEN_PRO=your_pro_token
 ```
 - 正式运行
