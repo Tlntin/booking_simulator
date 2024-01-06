@@ -36,7 +36,7 @@ class QueryWeather(Tool):
         self.token_pro = self.cfg.get('token', os.environ.get('QWEATHER_TOKEN_PRO', ''))
         assert self.token_free != '', 'weather api token must be acquired through ' \
             '"please get weather query api in https://dev.qweather.com/") \
-            and set by QWEATHER_TOKEN'
+            and set by QWEATHER_TOKEN_FREE and QWEATHER_TOKEN_PRO(option)'
         self.weather = Weather(self.token_free, self.token_pro)
         self.is_remote_tool = True
         try:

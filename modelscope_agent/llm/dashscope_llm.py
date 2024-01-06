@@ -1,12 +1,11 @@
 import os
 import random
+import time
 import traceback
 from http import HTTPStatus
 from typing import Union
 
 import dashscope
-import time
-from collections import OrderedDict
 import json
 from dashscope import Generation
 from modelscope_agent.agent_types import AgentType
@@ -31,12 +30,10 @@ class DashScopeLLM(LLM):
                  llm_artifacts: Union[str, dict],
                  functions=[],
                  **kwargs):
-        print("call generate")
-        failed_time = 0
-        failed_code_freq = OrderedDict()
-        failed_message_freq = OrderedDict()
+        error_message_list = []
+        llm_result = ''
         for i in range(3):
-            print("call generate at {} time".format(i + 1))
+            print('call generate at {} time'.format(i + 1))
             try:
                 if self.agent_type == AgentType.Messages:
                     messages = llm_artifacts if len(
@@ -57,13 +54,15 @@ class DashScopeLLM(LLM):
                         return llm_result
                     else:
                         err_msg = 'Error Request id: %s, Code: %d, status: %s, message: %s' % (
-                            response.request_id, response.status_code, response.code,
-                            response.message)
+                            response.request_id, response.status_code,
+                            response.code, response.message)
                         print(err_msg)
-                        failed_code_freq[response.status_code] = failed_code_freq.get(response.status_code, 0) + 1
-                        failed_message_freq[response.message] = failed_message_freq.get(response.message, 0) + 1
-                        failed_time += 1
-                        time.sleep(i * 2 + 1)
+                        error_message_list.append(err_msg)
+                        if 400 <= response.status_code < 500:
+                            return err_msg
+                            # break
+                        else:
+                            time.sleep(i * 2 + 1)
                 else:
                     response = Generation.call(
                         model=self.model,
@@ -76,23 +75,24 @@ class DashScopeLLM(LLM):
                         return llm_result
                     else:
                         err_msg = 'Error Request id: %s, Code: %d, status: %s, message: %s' % (
-                            response.request_id, response.status_code, response.code,
-                            response.message)
+                            response.request_id, response.status_code,
+                            response.code, response.message)
                         print(err_msg)
-                        failed_code_freq[response.status_code] = failed_code_freq.get(response.status_code, 0) + 1
-                        failed_message_freq[response.message] = failed_message_freq.get(response.message, 0) + 1
-                        failed_time += 1
-                        time.sleep(i * 2 + 1)
+                        error_message_list.append(err_msg)
+                        if 400 <= response.status_code < 500:
+                            return err_msg
+                            # break
+                        else:
+                            time.sleep(i * 2 + 1)
             except Exception as e:
                 error = traceback.format_exc()
                 error_msg = f'LLM error with input {llm_artifacts} \n dashscope error: {str(e)} with traceback {error}'
                 print(error_msg)
+                error_message_list.append(error_msg)
                 # raise RuntimeError(error)
                 time.sleep(i * 2 + 1)
-        if failed_time == 3:
-            last_failed_code = list(failed_code_freq.keys())[-1]
-            last_failed_message = list(failed_message_freq.keys())[-1]
-            return '调用模型失败，错误码：{}，错误信息：{}'.format(last_failed_code, last_failed_message)
+        if len(error_message_list) == 3:
+            raise RuntimeError('DashScope: \n' + '\n'.join(error_message_list))
 
         if self.agent_type == AgentType.MS_AGENT:
             # in the form of text
@@ -111,12 +111,10 @@ class DashScopeLLM(LLM):
                         llm_artifacts: Union[str, dict],
                         functions=[],
                         **kwargs):
-        print("call stream generate")
-        failed_time = 0
-        failed_code_freq = OrderedDict()
-        failed_message_freq = OrderedDict()
+        print('call stream generate')
+        error_message_list = []
         for i in range(3):
-            print("call stream generate at {} time".format(i + 1))
+            print('call stream generate at {} time'.format(i + 1))
             total_response = ''
             try:
                 if self.agent_type == AgentType.Messages:
@@ -137,17 +135,17 @@ class DashScopeLLM(LLM):
                 error = traceback.format_exc()
                 error_msg = f'LLM error with input {llm_artifacts} \n dashscope error: {str(e)} with traceback {error}'
                 print(error_msg)
-                # raise RuntimeError(error)
-                failed_time += 1
+                error_message_list.append(error_msg)
                 time.sleep(i * 2 + 1)
                 continue
-
+            need_break = False
             for response in responses:
                 if response.status_code == HTTPStatus.OK:
                     if self.agent_type == AgentType.Messages:
                         llm_result = CustomOutputWrapper.handle_message_chat_completion(
                             response)
-                        frame_text = llm_result['content'][len(total_response):]
+                        frame_text = llm_result['content'][len(total_response
+                                                               ):]
                     else:
                         llm_result = CustomOutputWrapper.handle_message_text_completion(
                             response)
@@ -160,17 +158,22 @@ class DashScopeLLM(LLM):
                         total_response = llm_result
                 else:
                     err_msg = 'Error Request id: %s, Code: %d, status: %s, message: %s' % (
-                        response.request_id, response.status_code, response.code,
-                        response.message)
+                        response.request_id, response.status_code,
+                        response.code, response.message)
                     print(err_msg)
-                    failed_code_freq[response.status_code] = failed_code_freq.get(response.status_code, 0) + 1
-                    failed_message_freq[response.message] = failed_message_freq.get(response.message, 0) + 1
-                    failed_time += 1
-                    time.sleep(i * 2 + 1)
+                    error_message_list.append(err_msg)
+                    if 400 <= response.status_code < 500:
+                        yield err_msg
+                        need_break = True
+                        break
+                    else:
+                        time.sleep(i * 2 + 1)
                     # raise RuntimeError(err_msg)
-            if failed_time == 0:
+            if need_break:
                 break
-        if failed_time == 3:
-            last_failed_code = list(failed_code_freq.keys())[-1]
-            last_failed_message = list(failed_message_freq.keys())[-1]
-            yield '调用模型失败，错误码：{}，错误信息：{}'.format(last_failed_code, last_failed_message)
+            if len(error_message_list) <= i:
+                break
+        if len(error_message_list) >= 3:
+            total_error = 'DashScope: \n' + '\n'.join(error_message_list) + "\n"
+            yield total_error
+            raise RuntimeError(total_error)

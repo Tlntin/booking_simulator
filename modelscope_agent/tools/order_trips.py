@@ -290,7 +290,7 @@ class OrderTrips(Tool):
                 print(seat_position)
                 if (trips_data["type"] == 1 and seat_type == "二等座") or\
                         (trips_data["type"] == 0 and seat_type == "硬座"):
-                    result = "温馨提示：您需要选择一个座位。一共有5个位置，分别为左侧的`A`/`B`/`C`位, 以及右侧的`D`/`F`位; 其中`A`和`F`为靠窗座位，`D`和`E`为靠过道座位。"
+                    result = "温馨提示：您需要选择一个座位。一共有5个位置，分别为左侧的`A`/`B`/`C`位, 以及右侧的`D`/`F`位; 其中`A`和`F`为靠窗座位，`C`和`D`为靠过道座位。"
                 elif seat_type == "一等座":
                     result = "温馨提示：您需要选择一个座位。一共有4个位置，分别为左侧的`A`/`C`位, 以及右侧的`D`/`F`位; 其中`A`和`F`为靠窗座位，`C`和`D`为靠过道座位。"
                 else:
